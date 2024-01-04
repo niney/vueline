@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-select Transfer Example</title>
+  <style>
+    select {
+      width: 200px;
+      height: 150px;
+    }
+  </style>
+  <script>
+    function transferOptions() {
+      const sourceSelect = document.getElementById('source');
+      const targetSelect = document.getElementById('target');
+
+      // 멀티 셀렉트 박스에서 선택한 항목을 대상 박스로 이동
+      for (let i = 0; i < sourceSelect.options.length; i++) {
+        const option = sourceSelect.options[i];
+        if (option.selected) {
+          targetSelect.options.add(new Option(option.text, option.value));
+          sourceSelect.remove(i);
+          i--;
+        }
+      }
+    }
+  </script>
+</head>
+<body>
+<select id="source" multiple>
+  <option value="1">Option 1</option>
+  <option value="2">Option 2</option>
+  <option value="3">Option 3</option>
+  <option value="4">Option 4</option>
+  <option value="5">Option 5</option>
+</select>
+<button onclick="transferOptions()">Transfer Selected Options</button>
+<select id="target" multiple></select>
+</body>
+</html>
