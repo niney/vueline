@@ -25,5 +25,11 @@ module.exports = defineConfig({
             filename: 'elepartsCrawl.html',
             title: 'elepartsCrawlApp'
         },
+        samBom: {
+            entry: 'src/pages/samplepcb/samBom/sam-bom.ts',
+            template: 'src/pages/samplepcb/samBom/index.html',
+            filename: 'samBom.html',
+            title: 'samBomApp'
+        }
     }
 })
