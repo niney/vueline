@@ -30,6 +30,12 @@ module.exports = defineConfig({
             template: 'src/pages/samplepcb/samBom/index.html',
             filename: 'samBom.html',
             title: 'samBomApp'
-        }
+        },
+        spSmartBom: {
+            entry: 'src/pages/samplepcb/spSmartBom/sp-smart-bom.ts',
+            template: 'src/pages/samplepcb/spSmartBom/index.html',
+            filename: 'spSmartBom.html',
+            title: 'spSmartBomApp'
+        },
     }
 })
