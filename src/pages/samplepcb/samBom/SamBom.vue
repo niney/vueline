@@ -68,7 +68,7 @@ import {VueCommonParams} from "@/model/vue-common-params";
 
 let that: any;
 
-interface BomItem {
+export interface BomItem {
     row_idx: number;
     increment_number?: string[];
     reference_prefix?: string;

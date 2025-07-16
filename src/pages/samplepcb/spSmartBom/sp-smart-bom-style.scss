@@ -1,0 +1,606 @@
+@use "tailwindcss";
+
+// Font definitions
+@font-face {
+    font-family: 'GmarketSansLight';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansLight.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'GmarketSansMedium';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'GmarketSansBold';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+// Basic styles
+[v-cloak] {
+    display: none;
+}
+
+body {
+    margin: 0;
+}
+
+// Text alignment
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+// Flex utilities
+.flex-item {
+    flex: 1;
+}
+
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+// Contents area
+.basic-page-contents, .page-contents {
+    margin: 0 auto;
+    max-width: 1300px;
+}
+
+.page-contents {
+    background: url("https://www.samplepcb.co.kr/img/bom/bom_intro_bg.png") center 0 no-repeat fixed;
+}
+
+// Button styles
+button {
+    &.btn-success-round {
+        color: #fff;
+        background-color: #198754;
+        border: 1px solid black;
+        border-radius: 25px;
+        padding: 6px 20px;
+    }
+
+    &.btn-nav-round {
+        color: #fff;
+        background-color: #303778;
+        border: transparent;
+        border-radius: 25px;
+        padding: 6px 20px;
+    }
+}
+
+// Section styles
+.section {
+    &.analysis-section {
+        background: url("https://www.samplepcb.co.kr/img/bom/bom_top_ext_bg.png");
+    }
+
+    .intro {
+        width: 1250px;
+        margin: 0 auto;
+    }
+
+    .slide {
+        display: flex;
+
+        .message * {
+            font: 30px GmarketSansBold;
+            color: white;
+        }
+
+        .slide-box {
+            display: flex;
+            align-items: center;
+        }
+    }
+
+    .message {
+        margin-top: 64px;
+
+        .top {
+            font: 30px GmarketSansMedium;
+            color: white;
+        }
+    }
+
+    .sub-message {
+        margin-top: 40px;
+
+        * {
+            font-weight: normal;
+            color: white;
+        }
+    }
+
+    .feat-list {
+        margin-top: 70px;
+        padding-left: 10px;
+        padding-bottom: 29px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+
+        .txt {
+            margin-left: 15px;
+            font-size: 18px;
+        }
+
+        .sub-txt {
+            margin-left: 18px;
+            font-size: 14px;
+            color: #dfeaff;
+        }
+    }
+}
+
+// Font classes
+.gmarket-sans-light, .gmarket-sans-light * {
+    font-family: GmarketSansLight, sans-serif;
+}
+
+.gmarket-sans-mid, .gmarket-sans-mid * {
+    font-family: GmarketSansMedium, sans-serif;
+}
+
+.gmarket-sans-bold, .gmarket-sans-bold * {
+    font-family: GmarketSansBold, sans-serif;
+}
+
+// Left area message
+.left-area-message {
+    .message {
+        margin-top: 64px;
+
+        .top {
+            font: 30px GmarketSansMedium;
+            color: white;
+        }
+    }
+
+    .sub-message {
+        margin-top: 40px;
+
+        * {
+            font-weight: normal;
+            color: white;
+        }
+    }
+}
+
+// File upload area
+.filebox-container {
+    display: flex;
+    justify-content: right;
+    align-items: center;
+    margin-top: 67px;
+}
+
+.filebox-area {
+    background: #FFFFFF;
+    border: transparent;
+    border-radius: 10px;
+    text-align: center;
+    display: flex;
+    width: 679px;
+    height: 196px;
+
+    .right {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+.filebox {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    label {
+        display: inline-block;
+        padding: .5em .75em;
+        color: #999;
+        font-size: inherit;
+        line-height: normal;
+        vertical-align: middle;
+        background-color: #fdfdfd;
+        cursor: pointer;
+        border: 1px solid #ebebeb;
+        border-bottom-color: #e2e2e2;
+        border-radius: .25em;
+    }
+
+    input[type="file"] {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+    }
+
+    &.bs3-primary label {
+        color: #fff;
+        background-color: #4264d0;
+        border-color: #2e6da4;
+        border-radius: 20px;
+        height: 47px;
+    }
+}
+
+// Search box
+.search-box {
+    background: url("https://www.samplepcb.co.kr/img/bom/bom_search_bg.png");
+    background-size: cover;
+    overflow: auto;
+}
+
+.search {
+    margin: 20px auto;
+    width: 1250px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+
+    .title {
+        color: #5185e5;
+        font-size: 18px;
+        margin: auto 10px auto 0;
+    }
+
+    .search-right-btn {
+        position: absolute;
+        right: 0;
+        top: 14px;
+    }
+
+    input[type=text],
+    input[type=submit] {
+        border: none;
+        border-radius: 0 40px 40px 0;
+        outline: none;
+        box-sizing: border-box;
+        height: 60px;
+        vertical-align: middle;
+        padding: 0 20px;
+        font-size: 18px;
+        line-height: 18px;
+        background: #FFFFFF;
+    }
+
+    input[type=text] {
+        width: 490px;
+        border-radius: 40px 0 0 40px;
+        margin-right: -4px;
+
+        &:focus {
+            border: none !important;
+        }
+    }
+
+    input[type=submit] {
+        padding: 20px;
+        cursor: pointer;
+    }
+}
+
+// Global loading overlay
+.global-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.spinner-container {
+    text-align: center;
+}
+
+.loading-text {
+    margin-top: 16px;
+    font-size: 16px;
+    color: #333;
+    font-family: GmarketSansMedium, sans-serif;
+}
+
+// Loading spinner
+.lds-roller {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+
+    div {
+        animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        transform-origin: 40px 40px;
+
+        &:after {
+            content: " ";
+            display: block;
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: dodgerblue;
+            margin: -4px 0 0 -4px;
+        }
+
+        @for $i from 1 through 8 {
+            &:nth-child(#{$i}) {
+                animation-delay: -0.036s * $i;
+            }
+        }
+
+        &:nth-child(1):after {
+            top: 63px;
+            left: 63px;
+        }
+
+        &:nth-child(2):after {
+            top: 68px;
+            left: 56px;
+        }
+
+        &:nth-child(3):after {
+            top: 71px;
+            left: 48px;
+        }
+
+        &:nth-child(4):after {
+            top: 72px;
+            left: 40px;
+        }
+
+        &:nth-child(5):after {
+            top: 71px;
+            left: 32px;
+        }
+
+        &:nth-child(6):after {
+            top: 68px;
+            left: 24px;
+        }
+
+        &:nth-child(7):after {
+            top: 63px;
+            left: 17px;
+        }
+
+        &:nth-child(8):after {
+            top: 56px;
+            left: 12px;
+        }
+    }
+}
+
+@keyframes lds-roller {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+// Results area styles
+.result_area_top {
+    margin-top: 5px;
+}
+
+// Analysis results
+.analysis-results {
+    .result-box {
+        background-color: white;
+    }
+}
+
+// PCB Table
+.pcb-table-container {
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+.pcb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+
+    th, td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+
+    .number-cell {
+        text-align: center;
+        white-space: nowrap;
+
+        .row-index {
+            color: #999;
+            font-size: 12px;
+        }
+    }
+
+    .product-cell {
+        .product-name {
+            font-weight: bold;
+            color: #303778;
+        }
+
+        .manufacturer {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .description {
+            margin: 5px 0;
+        }
+
+        .reference {
+            color: #0066cc;
+            margin-top: 3px;
+        }
+
+        .categories {
+            margin-top: 5px;
+
+            .category {
+                display: inline-block;
+                background-color: #f0f4f8;
+                border-radius: 4px;
+                padding: 2px 8px;
+                margin-right: 5px;
+                font-size: 12px;
+                color: #555;
+            }
+        }
+    }
+
+    .image-cell {
+        width: 120px;
+        text-align: center;
+
+        .product-image {
+            width: 100px;
+            height: 100px;
+            overflow: hidden;
+            margin: 0 auto;
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                border: 1px solid #eee;
+            }
+        }
+
+        .no-image {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border: 1px solid #eee;
+            margin: 0 auto;
+            color: #999;
+            font-size: 12px;
+        }
+    }
+
+    .package-cell {
+        .package-info {
+            .package-item {
+                margin-bottom: 5px;
+            }
+        }
+    }
+}
+
+// Highlight for alternating rows
+.bg-red-50 {
+    background-color: #fef2f2;
+}
+
+.bg-blue-50 {
+    background-color: #eff6ff;
+}
+
+// Button styles for React components
+.btn {
+    display: inline-block;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+    &.btn-outline-primary {
+        color: #007bff;
+        background-color: transparent;
+        background-image: none;
+        border-color: #007bff;
+
+        &:hover {
+            color: #fff;
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+    }
+
+    &.btn-outline-success {
+        color: #198754;
+        background-color: transparent;
+        background-image: none;
+        border-color: #198754;
+
+        &:hover {
+            color: #fff;
+            background-color: #198754;
+            border-color: #198754;
+        }
+    }
+
+    &.btn-outline-orange {
+        color: #fd7e14;
+        background-color: transparent;
+        background-image: none;
+        border-color: #fd7e14;
+
+        &:hover {
+            color: #fff;
+            background-color: #fd7e14;
+            border-color: #fd7e14;
+        }
+    }
+}
+
+// Form select
+.form-select {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    appearance: none;
+}

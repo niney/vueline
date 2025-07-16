@@ -7,6 +7,7 @@
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title><%= htmlWebpackPlugin.options.title %></title>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
 </head>
 <body>
 <noscript>
@@ -19,7 +20,16 @@
     const timeoutId = setInterval(function () {
         if (window._spSmartBomapp) {
             window._spSmartBomapp.bootstrap({
-
+                onRequestQuote: function(selectedItems, orderSummary) {
+                    console.log('견적요청:', selectedItems);
+                    console.log('주문 정보:', orderSummary);
+                    // 여기에 견적요청 처리 로직 구현
+                },
+                onAddToCart: function(selectedItems, orderSummary) {
+                    console.log('장바구니:', selectedItems);
+                    console.log('주문 정보:', orderSummary);
+                    // 여기에 장바구니 처리 로직 구현
+                }
             });
             clearTimeout(timeoutId);
             return;
