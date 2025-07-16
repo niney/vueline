@@ -5,6 +5,9 @@ module.exports = defineConfig({
     css: {
         extract: false
     },
+    configureWebpack: {
+        devtool: 'source-map'
+    },
     pages: {
         index: {
             entry: 'src/main.ts',
