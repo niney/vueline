@@ -38,7 +38,7 @@
                                 <div v-else>{{ index + 1 }}</div>
                             </td>
                             <td class="image-cell">
-                                <div v-if="product.parts?.serviceType === 'samplepcb' && (product.parts.size === 'AXIAL' || product.parts.size === 'DIP')" class="product-image">
+                                <div v-if="product.parts?.serviceType === 'samplepcb'" class="product-image">
                                     <img :src="`https://www.samplepcb.co.kr/img/pcb/${(product.parts.size || 'dip').toLowerCase()}.jpg`" :alt="product.part_number?.[0]">
                                 </div>
                                 <div v-else-if="product.parts?.photoUrl" class="product-image">
@@ -98,8 +98,6 @@
 
                                 <div class="debug">
                                     <div v-if="product.part_number_candidate" class="text-[10px] text-gray-600 mt-1 p-1 border border-gray-300 rounded">
-                                        <div>ml_predicted_part_number: {{ product.ml_predicted_part_number }}</div>
-                                        <div>ml_confidence: {{ product.ml_confidence }}</div>
                                         <div>part_number_candidate: {{ product.part_number_candidate }}</div>
                                         <div>search_value: {{ product.search_value }}</div>
                                         <div>value: {{ product.value }}</div>
