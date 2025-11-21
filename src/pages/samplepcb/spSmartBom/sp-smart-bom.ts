@@ -6,7 +6,7 @@ declare const window: any;
 
 const defaultParams: Partial<SpSmartBomParams> = {
     searchServerUrl: 'http://localhost:8081/api/pcbParts/_search',
-    mlServerUrl: 'http://localhost:8099/api/analysis',
+    mlServerUrl: 'http://localhost:8099/api/analysisWithExcelData',
     cartApiUrl: '/shop/cart_api.php'
 };
 

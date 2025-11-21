@@ -16,8 +16,7 @@
                     <div class="filebox-container flex-1">
                         <div class="filebox-area" @drop="dropUploadAnalysis($event);" @dragover="dropOverUploadAnalysis($event);">
                             <div class="right flex-1">
-                                <!-- 기존 loadingText 바인딩 제거 -->
-                                <img src="https://www.samplepcb.co.kr/img/bom/upload_bk.png" style="margin-bottom: 10px;"/>
+                                <img src="https://www.samplepcb.co.kr/img/bom/upload_bk.png" style="margin-bottom: 10px;" alt="업로드 표시"/>
                                 <p>Part Match in 30 Sec</p>
                             </div>
                             <div class="filebox bs3-primary flex-1">
@@ -25,7 +24,6 @@
                                     <label for="bom_file" style="width: 225px;">Upload BOM File</label>
                                     <input type="file" id="bom_file" name="file" @change="uploadAnalysis($event)"/>
                                 </form>
-                                <!-- <button class="btn-success-round" @click="testUploadAnalysis()">test</button> -->
                                 <div style="color: #a6b2c7;">엑셀파일만 업로드 가능</div>
                             </div>
                         </div>
@@ -357,13 +355,13 @@ import "./sp-smart-bom-style.scss";
 import "@/assets/styles/btn.scss";
 import "@/assets/styles/table.scss";
 import {defineComponent} from 'vue';
-import {examData} from "@/pages/samplepcb/spSmartBom/exam";
 import {CartApiResponse, CartItem, OrderSummary, Part, PcbItem, Price, SpSmartBomParams} from "@/model/sp-smart-bom-params";
 import {SAMPLEPCB_URL} from "@/app-constants";
 import AnalysisResultTable from "@/components/AnalysisResultTable.vue";
 import AnalysisResultTableAlternative from "@/components/AnalysisResultTableAlternative.vue";
 import SearchResultsTable from "@/components/SearchResultsTable.vue";
 import SearchPopup from "@/components/SearchPopup.vue";
+import * as XLSX from 'xlsx';
 
 let that: any;
 export default defineComponent({
@@ -400,6 +398,9 @@ export default defineComponent({
             isSearchPopupOpen: false,
             currentSearchItem: null as PcbItem | null,
             currentSearchItemIndex: -1,
+            lastUploadedFileName: '',
+            lastUploadedFileSize: 0,
+            lastUploadedFileTime: 0,
         };
     },
     beforeCreate() {
@@ -458,12 +459,6 @@ export default defineComponent({
         setFileName(name: string): void {
             this.fileName = name;
             this.orderSummary.fileName = name;
-        },
-        fileChanged(event: any) {
-            this.selectedFile = event.target.files[0];
-        },
-        uploadFile() {
-            // 기존 코드 유지
         },
         searchItems() {
             if (!this.searchQuery.trim()) {
@@ -538,9 +533,6 @@ export default defineComponent({
                 })
                 .join(', ');
         },
-        targetToStr(target: number) {
-            // 기존 코드 유지
-        },
         uploadAnalysis(event: Event) {
             this.isLoading = true;
             this.pcbItemList = [];
@@ -550,53 +542,173 @@ export default defineComponent({
             const file = target.files?.[0];
 
             if (!file) {
-                console.error('No file selected');
+                console.error('파일이 선택되지 않았습니다.');
                 this.isLoading = false;
                 return;
             }
 
-            this.setFileName(file.name);
-            let formData = new FormData();
-            formData.append('file', file);
+            // 같은 파일 재업로드 허용: 파일 정보 저장
+            const currentFileInfo = {
+                name: file.name,
+                size: file.size,
+                time: Date.now()
+            };
 
-            $.ajax({
-                url: this.params.mlServerUrl,
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: (response) => {
-                    this.pcbItemList = response.map((item: PcbItem) => {
-                        const newItem = {
-                            ...item,
-                            selected: !!item.parts,
-                        };
-                        this.updateSelectedPrice(newItem);  // 초기 가격 정보 설정
-                        return newItem;
+            // 같은 파일이라도 1초 이상 간격이 있으면 재업로드 허용
+            if (this.lastUploadedFileName === file.name &&
+                this.lastUploadedFileSize === file.size &&
+                (Date.now() - this.lastUploadedFileTime) < 1000) {
+                console.log('너무 빠른 재업로드 시도');
+                this.isLoading = false;
+                return;
+            }
+
+            this.lastUploadedFileName = currentFileInfo.name;
+            this.lastUploadedFileSize = currentFileInfo.size;
+            this.lastUploadedFileTime = currentFileInfo.time;
+
+            this.setFileName(file.name);
+
+            // 엑셀 파일 읽기 및 분석
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target?.result as ArrayBuffer);
+                    // 셀 스타일, 공식, 날짜 형식 포함하여 읽기
+                    const workbook = XLSX.read(data, {
+                        type: 'array',
+                        cellStyles: true,
+                        cellFormula: true,
+                        cellDates: true,
+                        raw: false
                     });
-                    this.updateSelectAll();
+
+
+                    // 모든 시트의 전체 데이터를 추출 (헤더 상관없이)
+                    const allExcelData: any = {
+                        fileName: file.name,
+                        fileSize: file.size,
+                        sheets: []
+                    };
+
+                    workbook.SheetNames.forEach((sheetName/*, index*/) => {
+                        const worksheet = workbook.Sheets[sheetName];
+
+                        // 시트의 범위 정보
+                        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+
+                        // 시트 전체 데이터 추출
+                        const sheetData: any = {
+                            name: sheetName,
+                            range: {
+                                startRow: range.s.r,
+                                endRow: range.e.r,
+                                startCol: range.s.c,
+                                endCol: range.e.c
+                            },
+                            cells: []
+                        };
+
+                        // 모든 셀 데이터 추출 (행 제한 없이)
+                        for (let row = range.s.r; row <= range.e.r; row++) {
+                            for (let col = range.s.c; col <= range.e.c; col++) {
+                                const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                                const cell = worksheet[cellAddress];
+
+                                if (cell) {
+                                    // 셀 상세 정보 추출
+                                    const cellInfo = {
+                                        address: cellAddress,
+                                        row: row,
+                                        col: col,
+                                        formatted: cell.w || '',      // 서식화된 텍스트 (Excel에서 보이는 대로)
+                                        raw: cell.v,                  // 원본 값
+                                        type: cell.t || 'z',          // 데이터 타입 (s=문자열, n=숫자, b=불린, d=날짜, z=빈값)
+                                        format: cell.z || '',         // 숫자 형식 코드
+                                        formula: cell.f || '',        // 공식
+                                        style: cell.s || null         // 스타일 정보
+                                    };
+
+                                    sheetData.cells.push(cellInfo);
+                                }
+                            }
+                        }
+
+                        // 끝에서부터 검사하여 빈 행 제거
+                        const nonEmptyRows = new Set();
+                        sheetData.cells.forEach((cell: any) => {
+                            if (cell.formatted && cell.formatted.toString().trim() !== '') {
+                                nonEmptyRows.add(cell.row);
+                            }
+                        });
+
+                        // 빈 행이 아닌 행들만 포함하도록 필터링
+                        if (nonEmptyRows.size > 0) {
+                            const maxNonEmptyRow = Math.max(...Array.from(nonEmptyRows) as number[]);
+                            sheetData.cells = sheetData.cells.filter((cell: any) => cell.row <= maxNonEmptyRow);
+                            sheetData.range.endRow = maxNonEmptyRow;
+                        }
+
+                        allExcelData.sheets.push(sheetData);
+
+                    });
+
+                    // API 서버에 파일과 추출된 데이터 전송
+
+                    // FormData 생성
+                    let formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('excelData', JSON.stringify(allExcelData));
+
+                    $.ajax({
+                        url: this.params.mlServerUrl,
+                        type: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: (response) => {
+                            this.pcbItemList = response.map((item: PcbItem) => {
+                                const newItem = {
+                                    ...item,
+                                    selected: !!item.parts,
+                                };
+                                this.updateSelectedPrice(newItem);  // 초기 가격 정보 설정
+                                return newItem;
+                            });
+                            this.updateSelectAll();
+                            this.isLoading = false;
+                            this.viewMode = 'upload';
+
+                            // 파일 입력 필드는 초기화하지 않음 (다른 곳에서 사용 가능)
+                        },
+                        error: (error) => {
+                            console.error('❌ ML 서버 BOM 분석 오류:', error);
+                            this.isLoading = false;
+                            alert(`BOM 분석 실패!\n\n오류 내용:\n${error.responseText || error.statusText || '알 수 없는 오류'}\n\n자세한 내용은 콘솔을 확인해주세요.`);
+
+                            // 파일 입력 필드는 초기화하지 않음 (다른 곳에서 사용 가능)
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('❌ 엑셀 파일 읽기 오류:', error);
                     this.isLoading = false;
-                    this.viewMode = 'upload';
-                },
-                error: (error) => {
-                    console.log('Upload error: ', error);
-                    this.isLoading = false;
+                    alert('엑셀 파일 읽기 중 오류가 발생했습니다. 콘솔을 확인해주세요.');
+
+                    // 파일 입력 초기화 (같은 파일 다시 선택 가능하게)
+                    target.value = '';
                 }
-            });
-        },
-        testUploadAnalysis() {
-            this.setFileName('test_data.xlsx');
-            this.pcbItemList = examData.map(item => {
-                const newItem = {
-                    ...item,
-                    selected: !!item.parts,
-                };
-                if (item.qty) {
-                    this.updateSelectedPrice(newItem);  // 초기 가격 정보 설정
-                }
-                return newItem;
-            });
-            this.updateSelectAll();
+            };
+
+            reader.onerror = (error) => {
+                console.error('❌ 파일 읽기 오류:', error);
+                this.isLoading = false;
+                alert('파일 읽기 중 오류가 발생했습니다.');
+
+                // 파일 입력 필드는 초기화하지 않음 (다른 곳에서 사용 가능)
+            };
+
+            reader.readAsArrayBuffer(file);
         },
         toggleAll() {
             this.pcbItemList.forEach(item => {
@@ -794,39 +906,15 @@ export default defineComponent({
             if (!event.dataTransfer?.files.length) return;
 
             const file = event.dataTransfer.files[0];
-            this.isLoading = true;
-            this.pcbItemList = [];
-            this.selectAll = false;
 
-            this.setFileName(file.name);
-            let formData = new FormData();
-            formData.append('file', file);
-
-            $.ajax({
-                url: this.params.mlServerUrl,
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: (response) => {
-                    this.pcbItemList = response.map((item: PcbItem) => {
-                        const newItem = {
-                            ...item,
-                            selected: !!item.parts,
-                        };
-                        if (item.qty) {
-                            this.updateSelectedPrice(newItem);  // 초기 가격 정보 설정
-                        }
-                        return newItem;
-                    });
-                    this.updateSelectAll();
-                    this.isLoading = false;
-                },
-                error: (error) => {
-                    console.log('Upload error: ', error);
-                    this.isLoading = false;
+            // uploadAnalysis와 동일한 로직 실행
+            const fakeEvent = {
+                target: {
+                    files: [file]
                 }
-            });
+            } as any;
+
+            this.uploadAnalysis(fakeEvent);
         },
         dropOverUploadAnalysis(event: DragEvent) {
             event.preventDefault();
@@ -900,7 +988,7 @@ export default defineComponent({
                 newItem.selected = true;
                 this.pcbItemList.splice(index, 1, newItem);
             }
-        }
+        },
     },
     computed: {
         selectedCount(): number {
