@@ -98,14 +98,32 @@
                     부품번호 검증 ({{ partNumberItems.length }})
                 </button>
             </div>
-            <div class="mb-4 text-sm text-gray-600">
-                전체 {{ analysisResults.total_rows }}행 / 분석 {{ analysisResults.analyzed_rows }}행 / PCB BOM {{ analysisResults.pcb_rows }}개
+            <div class="flex items-center justify-between mb-4">
+                <div class="text-sm text-gray-600">
+                    전체 {{ analysisResults.total_rows }}행 / 분석 {{ analysisResults.analyzed_rows }}행 / PCB BOM {{ analysisResults.pcb_rows }}개
+                </div>
+                <div class="flex gap-1">
+                    <button
+                        @click="filterMode = 'all'"
+                        class="px-3 py-1 text-sm rounded"
+                        :class="filterMode === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+                    >
+                        전체 ({{ analysisResults.results.length }})
+                    </button>
+                    <button
+                        @click="filterMode = 'verified'"
+                        class="px-3 py-1 text-sm rounded"
+                        :class="filterMode === 'verified' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+                    >
+                        검증됨 ({{ verifiedCount }})
+                    </button>
+                </div>
             </div>
 
             <!-- 카드 리스트 -->
             <div class="space-y-4">
                 <div
-                    v-for="item in analysisResults.results"
+                    v-for="item in filteredResults"
                     :key="item.index"
                     class="result-card border rounded-lg p-4"
                     :class="item.is_pcb_bom ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'"
@@ -262,7 +280,8 @@ export default defineComponent({
             showVerifyModal: false,
             isVerifying: false,
             verificationResults: {} as Record<number, boolean | 'loading'>,
-            verificationProgress: 0
+            verificationProgress: 0,
+            filterMode: 'all' as 'all' | 'verified'
         };
     },
     computed: {
@@ -274,6 +293,18 @@ export default defineComponent({
             if (!this.analysisResults?.results) return [];
             return this.analysisResults.results.filter(
                 (item: any) => item.is_pcb_bom && item.extracted_data?.part_number
+            );
+        },
+        verifiedCount(): number {
+            return Object.values(this.verificationResults).filter(v => v === true).length;
+        },
+        filteredResults(): any[] {
+            if (!this.analysisResults?.results) return [];
+            if (this.filterMode === 'all') {
+                return this.analysisResults.results;
+            }
+            return this.analysisResults.results.filter(
+                (item: any) => this.verificationResults[item.index] === true
             );
         }
     },
@@ -455,9 +486,14 @@ export default defineComponent({
                             // result: true면 데이터 있음, false면 없음
                             this.verificationResults[item.index] = response.result === true;
 
-                            // manufacturerName이 있으면 Manufacturer 업데이트
-                            if (response.result && response.data?.manufacturerName) {
-                                item.extracted_data.manufacturer = response.data.manufacturerName;
+                            // 검증 데이터로 업데이트
+                            if (response.result && response.data) {
+                                if (response.data.manufacturerName) {
+                                    item.extracted_data.manufacturer = response.data.manufacturerName;
+                                }
+                                if (response.data.description) {
+                                    item.extracted_data.description = response.data.description;
+                                }
                             }
 
                             console.log(`검증 완료 [${item.index}]:`, partNumber, response);
