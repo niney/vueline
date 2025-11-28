@@ -34,6 +34,7 @@
       <li><a href="/elepartsCrawl" rel="elepartsCrawl">elepartsCrawl</a></li>
       <li><a href="/samBom" rel="samBom">samBom</a></li>
       <li><a href="/spSmartBom" rel="spSmartBom">spSmartBom</a></li>
+      <li><a href="/spSmartAegis" rel="spSmartAegis">spSmartAegis</a></li>
     </ul>
   </div>
 </template>

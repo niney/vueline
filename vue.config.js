@@ -40,5 +40,11 @@ module.exports = defineConfig({
             filename: 'spSmartBom.html',
             title: 'spSmartBomApp'
         },
+        spSmartAegis: {
+            entry: 'src/pages/samplepcb/spSmartAegis/sp-smart-aegis.ts',
+            template: 'src/pages/samplepcb/spSmartAegis/index.html',
+            filename: 'spSmartAegis.html',
+            title: 'spSmartAegisApp'
+        }
     }
 })
