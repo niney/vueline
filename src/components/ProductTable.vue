@@ -38,7 +38,10 @@
                                 <div v-else>{{ index + 1 }}</div>
                             </td>
                             <td class="image-cell">
-                                <div v-if="product.parts?.photoUrl" class="product-image">
+                                <div v-if="product.parts?.serviceType === 'samplepcb' && (product.parts.size === 'AXIAL' || product.parts.size === 'DIP')" class="product-image">
+                                    <img :src="`https://www.samplepcb.co.kr/img/pcb/${(product.parts.size || 'dip').toLowerCase()}.jpg`" :alt="product.part_number?.[0]">
+                                </div>
+                                <div v-else-if="product.parts?.photoUrl" class="product-image">
                                     <img :src="product.parts.photoUrl" :alt="product.part_number?.[0]">
                                 </div>
                                 <div v-else class="no-image">이미지 없음</div>
