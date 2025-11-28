@@ -88,7 +88,16 @@
 
         <!-- 분석 결과 (카드 형식) -->
         <div v-if="analysisResults" class="mt-4">
-            <h2 class="text-xl font-bold mb-4">분석 결과</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold">분석 결과</h2>
+                <button
+                    @click="openVerifyModal"
+                    :disabled="partNumberItems.length === 0"
+                    class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-gray-400"
+                >
+                    부품번호 검증 ({{ partNumberItems.length }})
+                </button>
+            </div>
             <div class="mb-4 text-sm text-gray-600">
                 전체 {{ analysisResults.total_rows }}행 / 분석 {{ analysisResults.analyzed_rows }}행 / PCB BOM {{ analysisResults.pcb_rows }}개
             </div>
@@ -127,7 +136,17 @@
                     <div v-if="item.is_pcb_bom" class="mb-3 grid grid-cols-2 md:grid-cols-3 gap-2">
                         <div class="bg-white p-2 rounded border">
                             <span class="text-xs text-gray-500">Part Number</span>
-                            <p class="text-sm font-medium">{{ item.extracted_data.part_number || '-' }}</p>
+                            <div class="flex items-center gap-2">
+                                <p class="text-sm font-medium">{{ item.extracted_data.part_number || '-' }}</p>
+                                <span
+                                    v-if="verificationResults[item.index] === true"
+                                    class="px-1.5 py-0.5 text-xs rounded bg-green-100 text-green-700"
+                                >검증됨</span>
+                                <span
+                                    v-else-if="verificationResults[item.index] === false"
+                                    class="px-1.5 py-0.5 text-xs rounded bg-red-100 text-red-700"
+                                >미확인</span>
+                            </div>
                         </div>
                         <div class="bg-white p-2 rounded border">
                             <span class="text-xs text-gray-500">Manufacturer</span>
@@ -159,6 +178,58 @@
                 </div>
             </div>
         </div>
+
+        <!-- 부품번호 검증 모달 -->
+        <div v-if="showVerifyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h3 class="text-lg font-bold">부품번호 검증</h3>
+                    <button @click="closeVerifyModal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                <div class="p-4 overflow-y-auto max-h-[60vh]">
+                    <div class="mb-4 text-sm text-gray-600">
+                        총 {{ partNumberItems.length }}개 부품번호
+                        <span v-if="isVerifying"> - 검증 중... ({{ verificationProgress }}/{{ partNumberItems.length }})</span>
+                    </div>
+                    <table class="min-w-full bg-white border border-gray-200">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="py-2 px-3 border-b text-left text-sm">Row</th>
+                                <th class="py-2 px-3 border-b text-left text-sm">Part Number</th>
+                                <th class="py-2 px-3 border-b text-left text-sm">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in partNumberItems" :key="item.index" class="hover:bg-gray-50">
+                                <td class="py-2 px-3 border-b text-sm">#{{ item.index }}</td>
+                                <td class="py-2 px-3 border-b text-sm font-medium">{{ item.extracted_data.part_number }}</td>
+                                <td class="py-2 px-3 border-b text-sm">
+                                    <span v-if="verificationResults[item.index] === undefined" class="text-gray-400">대기</span>
+                                    <span v-else-if="verificationResults[item.index] === 'loading'" class="text-blue-500">검증 중...</span>
+                                    <span v-else-if="verificationResults[item.index] === true" class="text-green-600">검증됨</span>
+                                    <span v-else class="text-red-500">미확인</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex justify-end gap-2 p-4 border-t">
+                    <button
+                        @click="closeVerifyModal"
+                        class="px-4 py-2 border rounded hover:bg-gray-100"
+                    >
+                        닫기
+                    </button>
+                    <button
+                        @click="verifyPartNumbers"
+                        :disabled="isVerifying"
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+                    >
+                        {{ isVerifying ? '검증 중...' : '검증' }}
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -186,13 +257,24 @@ export default defineComponent({
             headers: [] as string[],
             rows: [] as string[][],
             excelData: null as any,
-            analysisResults: null as any
+            analysisResults: null as any,
+            // 부품번호 검증
+            showVerifyModal: false,
+            isVerifying: false,
+            verificationResults: {} as Record<number, boolean | 'loading'>,
+            verificationProgress: 0
         };
     },
     computed: {
         pcbBomItems(): any[] {
             if (!this.analysisResults?.results) return [];
             return this.analysisResults.results.filter((item: any) => item.is_pcb_bom);
+        },
+        partNumberItems(): any[] {
+            if (!this.analysisResults?.results) return [];
+            return this.analysisResults.results.filter(
+                (item: any) => item.is_pcb_bom && item.extracted_data?.part_number
+            );
         }
     },
     created() {
@@ -339,6 +421,61 @@ export default defineComponent({
             if (confidence >= 0.7) return 'text-green-600 font-medium';
             if (confidence >= 0.4) return 'text-yellow-600';
             return 'text-red-500';
+        },
+        openVerifyModal() {
+            this.showVerifyModal = true;
+            this.verificationResults = {};
+            this.verificationProgress = 0;
+        },
+        closeVerifyModal() {
+            this.showVerifyModal = false;
+        },
+        async verifyPartNumbers() {
+            this.isVerifying = true;
+            this.verificationProgress = 0;
+
+            const items = this.partNumberItems;
+            const batchSize = 3;
+
+            for (let i = 0; i < items.length; i += batchSize) {
+                const batch = items.slice(i, i + batchSize);
+
+                // 배치 내 항목들을 loading 상태로
+                batch.forEach(item => {
+                    this.verificationResults[item.index] = 'loading';
+                });
+
+                // 병렬로 3개 요청
+                const promises = batch.map(item => {
+                    const partNumber = item.extracted_data.part_number;
+                    const url = `${this.params.searchServerUrl}/pcbParts/_indexingByDigikey?partNumber=${encodeURIComponent(partNumber)}`;
+
+                    return $.get(url)
+                        .then((response: any) => {
+                            // result: true면 데이터 있음, false면 없음
+                            this.verificationResults[item.index] = response.result === true;
+
+                            // manufacturerName이 있으면 Manufacturer 업데이트
+                            if (response.result && response.data?.manufacturerName) {
+                                item.extracted_data.manufacturer = response.data.manufacturerName;
+                            }
+
+                            console.log(`검증 완료 [${item.index}]:`, partNumber, response);
+                            return { index: item.index, partNumber, response, success: response.result };
+                        })
+                        .catch((error: any) => {
+                            this.verificationResults[item.index] = false;
+                            console.error(`검증 실패 [${item.index}]:`, partNumber, error);
+                            return { index: item.index, partNumber, error, success: false };
+                        });
+                });
+
+                await Promise.all(promises);
+                this.verificationProgress = Math.min(i + batchSize, items.length);
+            }
+
+            this.isVerifying = false;
+            this.showVerifyModal = false;
         }
     }
 });
