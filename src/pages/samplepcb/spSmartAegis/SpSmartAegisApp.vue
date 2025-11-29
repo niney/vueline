@@ -93,13 +93,22 @@
         <div v-if="analysisResults" class="mt-4">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-bold">분석 결과</h2>
-                <button
-                    @click="openVerifyModal"
-                    :disabled="partNumberItems.length === 0"
-                    class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-gray-400"
-                >
-                    부품번호 검증 ({{ partNumberItems.length }})
-                </button>
+                <div class="flex gap-2">
+                    <button
+                        @click="openVerifyModal"
+                        :disabled="partNumberItems.length === 0"
+                        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-gray-400"
+                    >
+                        부품번호 검증 ({{ partNumberItems.length }})
+                    </button>
+                    <button
+                        @click="downloadTrainingData"
+                        :disabled="verifiedCount === 0"
+                        class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 disabled:bg-gray-400"
+                    >
+                        훈련 데이터 다운 ({{ verifiedCount }})
+                    </button>
+                </div>
             </div>
             <div class="flex items-center justify-between mb-4">
                 <div class="text-sm text-gray-600">
@@ -532,6 +541,57 @@ export default defineComponent({
 
             this.isVerifying = false;
             this.showVerifyModal = false;
+        },
+        downloadTrainingData() {
+            // 검증된 항목만 필터링
+            const verifiedItems = this.analysisResults.results.filter(
+                (item: any) => this.verificationResults[item.index] === true
+            );
+
+            // 필드 매핑
+            const fieldMapping = [
+                { key: 'reference', label: 'REFERENCE' },
+                { key: 'part_number', label: 'PART_NUMBER' },
+                { key: 'description', label: 'DESCRIPTION' },
+                { key: 'quantity', label: 'QUANTITY' },
+                { key: 'manufacturer', label: 'MANUFACTURER' },
+                { key: 'package', label: 'PACKAGE' }
+            ];
+
+            // 훈련 데이터 포맷으로 변환
+            const trainingData = verifiedItems.map((item: any, idx: number) => {
+                const data = item.extracted_data;
+                const cells: string[] = [];
+                const labels: string[] = [];
+
+                // 값이 있는 필드만 추가
+                fieldMapping.forEach(field => {
+                    const value = data[field.key];
+                    if (value !== null && value !== undefined && value !== '') {
+                        cells.push(String(value));
+                        labels.push(field.label);
+                    }
+                });
+
+                return {
+                    row_id: String(idx + 1).padStart(3, '0'),
+                    cells,
+                    labels
+                };
+            });
+
+            // JSON 파일 다운로드
+            const blob = new Blob([JSON.stringify(trainingData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            // 엑셀 파일명에서 확장자 제거
+            const baseFileName = this.fileName.replace(/\.(xlsx|xls)$/i, '');
+            a.download = `${baseFileName}_training_data_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
     }
 });
