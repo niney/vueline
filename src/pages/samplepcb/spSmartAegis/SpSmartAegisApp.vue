@@ -30,6 +30,9 @@
             <span class="text-sm text-gray-600">
                 파일: <span class="font-medium">{{ fileName }}</span>
             </span>
+            <select v-model="selectedModel" class="border p-2 rounded text-sm">
+                <option v-for="model in modelList" :key="model" :value="model">{{ model }}</option>
+            </select>
             <button
                 @click="analyzeFile"
                 :disabled="isLoading"
@@ -281,7 +284,23 @@ export default defineComponent({
             isVerifying: false,
             verificationResults: {} as Record<number, boolean | 'loading'>,
             verificationProgress: 0,
-            filterMode: 'all' as 'all' | 'verified'
+            filterMode: 'all' as 'all' | 'verified',
+            // 모델 선택
+            modelList: [
+                'gpt-oss:20b',
+                'gpt-oss:120b',
+                'cogito-2.1:671b',
+                'glm-4.6',
+                'kimi-k2:1t',
+                'kimi-k2-thinking',
+                'qwen3-coder:480b',
+                'deepseek-v3.1:671b',
+                'qwen3-vl:235b-instruct',
+                'qwen3-vl:235b',
+                'minimax-m2',
+                'gemini-3-pro-preview'
+            ] as string[],
+            selectedModel: 'gpt-oss:20b'
         };
     },
     computed: {
@@ -427,6 +446,7 @@ export default defineComponent({
 
             const formData = new FormData();
             formData.append('excelData', JSON.stringify(this.excelData));
+            formData.append('model', this.selectedModel);
 
             $.ajax({
                 url: this.params.mlServerUrl + '/aegisAnalysis',
