@@ -357,6 +357,12 @@ export default defineComponent({
         },
         processFile(file: File) {
             this.fileName = file.name;
+            // 이전 분석 결과 초기화
+            this.analysisResults = null;
+            this.verificationResults = {};
+            this.verificationProgress = 0;
+            this.filterMode = 'all';
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
