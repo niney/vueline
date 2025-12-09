@@ -512,33 +512,55 @@ export default defineComponent({
                 });
 
                 // 병렬로 3개 요청
-                const promises = batch.map(item => {
+                const promises = batch.map(async item => {
                     const partNumber = item.extracted_data.part_number;
-                    const url = `${this.params.searchServerUrl}/pcbParts/_indexingByDigikey?partNumber=${encodeURIComponent(partNumber)}`;
 
-                    return $.get(url)
-                        .then((response: any) => {
-                            // result: true면 데이터 있음, false면 없음
-                            this.verificationResults[item.index] = response.result === true;
+                    try {
+                        // 1단계: _searchExactMatch로 먼저 검색
+                        const exactMatchUrl = `${this.params.searchServerUrl}/pcbParts/_searchExactMatch?partName=${encodeURIComponent(partNumber)}`;
+                        const exactMatchResponse: any = await $.get(exactMatchUrl);
 
-                            // 검증 데이터로 업데이트
-                            if (response.result && response.data) {
-                                if (response.data.manufacturerName) {
-                                    item.extracted_data.manufacturer = response.data.manufacturerName;
-                                }
-                                if (response.data.description) {
-                                    item.extracted_data.description = response.data.description;
-                                }
+                        // _searchExactMatch 성공 시 (result: true && data가 빈 배열이 아님)
+                        if (exactMatchResponse.result === true && exactMatchResponse.data && exactMatchResponse.data.length > 0) {
+                            this.verificationResults[item.index] = true;
+
+                            // 첫 번째 검색 결과로 데이터 업데이트
+                            const matchedData = exactMatchResponse.data[0];
+                            if (matchedData.manufacturerName) {
+                                item.extracted_data.manufacturer = matchedData.manufacturerName;
+                            }
+                            if (matchedData.description) {
+                                item.extracted_data.description = matchedData.description;
                             }
 
-                            console.log(`검증 완료 [${item.index}]:`, partNumber, response);
-                            return { index: item.index, partNumber, response, success: response.result };
-                        })
-                        .catch((error: any) => {
-                            this.verificationResults[item.index] = false;
-                            console.error(`검증 실패 [${item.index}]:`, partNumber, error);
-                            return { index: item.index, partNumber, error, success: false };
-                        });
+                            console.log(`검증 완료 (ExactMatch) [${item.index}]:`, partNumber, exactMatchResponse);
+                            return { index: item.index, partNumber, response: exactMatchResponse, success: true };
+                        }
+
+                        // 2단계: _searchExactMatch 실패 시 _indexingByDigikey 호출
+                        const digikeyUrl = `${this.params.searchServerUrl}/pcbParts/_indexingByDigikey?partNumber=${encodeURIComponent(partNumber)}`;
+                        const digikeyResponse: any = await $.get(digikeyUrl);
+
+                        // result: true면 데이터 있음, false면 없음
+                        this.verificationResults[item.index] = digikeyResponse.result === true;
+
+                        // 검증 데이터로 업데이트
+                        if (digikeyResponse.result && digikeyResponse.data) {
+                            if (digikeyResponse.data.manufacturerName) {
+                                item.extracted_data.manufacturer = digikeyResponse.data.manufacturerName;
+                            }
+                            if (digikeyResponse.data.description) {
+                                item.extracted_data.description = digikeyResponse.data.description;
+                            }
+                        }
+
+                        console.log(`검증 완료 (Digikey) [${item.index}]:`, partNumber, digikeyResponse);
+                        return { index: item.index, partNumber, response: digikeyResponse, success: digikeyResponse.result };
+                    } catch (error: any) {
+                        this.verificationResults[item.index] = false;
+                        console.error(`검증 실패 [${item.index}]:`, partNumber, error);
+                        return { index: item.index, partNumber, error, success: false };
+                    }
                 });
 
                 await Promise.all(promises);
