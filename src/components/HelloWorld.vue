@@ -36,6 +36,7 @@
       <li><a href="/spSmartBom" rel="spSmartBom">spSmartBom</a></li>
       <li><a href="/spSmartAegis" rel="spSmartAegis">spSmartAegis</a></li>
       <li><a href="/spSmartBomDetail" rel="spSmartBomDetail">spSmartBomDetail</a></li>
+      <li><a href="/spSmartBomV2" rel="spSmartBomV2">spSmartBomV2</a></li>
     </ul>
   </div>
 </template>

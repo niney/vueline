@@ -1,0 +1,296 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@import "tailwindcss";
+
+/* Tailwind v4 커스텀 테마 */
+@theme {
+    --font-pretendard: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    
+    /* 다크 모드 색상 */
+    --color-dark-bg: #1a1d23;
+    --color-dark-sidebar: #12151a;
+    --color-dark-hover: #1f2937;
+    --color-dark-border: #2d3748;
+    
+    /* 라이트 모드 색상 */
+    --color-light-bg: #f1f5f9;
+    --color-light-sidebar: #f8fafc;
+    --color-light-hover: #e5e7eb;
+    --color-light-border: #e5e7eb;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-pretendard);
+}
+
+.sp-smart-bom-v2 {
+    display: flex;
+    min-height: 100vh;
+    background: #1a1d23;
+    color: #fff;
+
+    /* 사이드바 */
+    .sidebar {
+        width: 220px;
+        background: #12151a;
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+        transition: all 0.3s ease;
+
+        &.collapsed {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+
+    .logo-icon {
+        background: #3b82f6;
+        padding: 8px;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+
+    .logo-text small {
+        display: block;
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    .nav-menu {
+        flex: 1;
+    }
+
+    .nav-title {
+        color: #6b7280;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .nav-menu ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* 네비게이션 메뉴 아이템 */
+    .nav-item {
+        padding: 8px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        margin-bottom: 2px;
+        color: rgba(255, 255, 255, 0.7);
+
+        i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        &.active {
+            background: rgba(30, 58, 95, 0.5);
+            color: #fff;
+        }
+
+        &:hover:not(.active) {
+            background: #1f2937;
+            color: #fff;
+        }
+    }
+
+    .sidebar-footer {
+        font-size: 12px;
+        color: #6b7280;
+
+        .link {
+            color: #60a5fa;
+        }
+    }
+
+    /* 메인 컨텐츠 */
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .content-toolbar {
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+
+        > .flex-1 {
+            flex: 1;
+        }
+    }
+
+    .toolbar-spacer {
+        flex: 1;
+    }
+
+    /* 버튼 아이콘 */
+    .btn-icon {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.7);
+
+        &:hover {
+            background: #1f2937;
+            color: #fff;
+        }
+    }
+
+    .toolbar-divider {
+        height: 1px;
+        background: #2d3748;
+    }
+
+    .content-body {
+        flex: 1;
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 업로드 영역 */
+    .upload-area {
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .upload-dropzone {
+        border: 2px dashed #3b82f6;
+        border-radius: 16px;
+        padding: 48px 32px;
+        text-align: center;
+        background: rgba(59, 130, 246, 0.05);
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #60a5fa;
+        }
+    }
+
+    .upload-icon {
+        color: #3b82f6;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .upload-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+    }
+
+    .upload-desc {
+        color: #9ca3af;
+        margin: 0 0 8px 0;
+        font-size: 14px;
+    }
+
+    .upload-formats {
+        color: #6b7280;
+        font-size: 12px;
+        margin-bottom: 24px;
+    }
+
+    .upload-btn {
+        display: inline-block;
+        background: #3b82f6;
+        color: #fff;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s ease;
+
+        &:hover {
+            background: #2563eb;
+        }
+    }
+
+    /* 라이트 모드 */
+    &.light-mode {
+        background: #f1f5f9;
+        color: #111827;
+
+        .sidebar {
+            background: #f8fafc;
+        }
+
+        .logo-text small {
+            color: #6b7280;
+        }
+
+        .nav-title {
+            color: #6b7280;
+        }
+
+        .nav-item {
+            color: #4b5563;
+
+            &.active {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
+
+            &:hover:not(.active) {
+                background: #e5e7eb;
+                color: #111827;
+            }
+        }
+
+        .sidebar-footer {
+            color: #6b7280;
+
+            .link {
+                color: #3b82f6;
+            }
+        }
+
+        .btn-icon {
+            color: #4b5563;
+
+            &:hover {
+                background: #e5e7eb;
+                color: #111827;
+            }
+        }
+
+        .toolbar-divider {
+            background: #e5e7eb;
+        }
+    }
+}

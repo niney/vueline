@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <title><%= htmlWebpackPlugin.options.title %></title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+</head>
+<body>
+<noscript>
+    <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+</noscript>
+<div id="<%= htmlWebpackPlugin.options.title %>"></div>
+<!-- built files will be auto injected -->
+<script>
+    let cnt = 0;
+    const timeoutId = setInterval(function () {
+        if (window._spSmartBomV2app) {
+            window._spSmartBomV2app.bootstrap({
+                // V2 콜백 함수 설정
+            });
+            clearTimeout(timeoutId);
+            return;
+        }
+        cnt++;
+        if (cnt === 1000) {
+            clearTimeout(timeoutId);
+        }
+    });
+
+</script>
+</body>
+</html>

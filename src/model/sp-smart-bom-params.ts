@@ -260,5 +260,11 @@ export interface SpSmartBomDetailParams extends VueCommonParams {
     partId: string;
 }
 
+export interface SpSmartBomV2Params extends VueCommonParams {
+    searchServerUrl?: string;
+    mlServerUrl?: string;
+    cartApiUrl?: string;
+}
+
 // 모든 인터페이스 export
 export type { CartItem, CartBasicInfo, CartApiResponse };
