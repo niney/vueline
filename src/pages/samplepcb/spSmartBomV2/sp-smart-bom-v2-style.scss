@@ -4,28 +4,10 @@
 /* Tailwind v4 커스텀 테마 */
 @theme {
     --font-pretendard: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-
-    /* 다크 모드 색상 */
-    --color-dark-bg: #1a1d23;
-    --color-dark-sidebar: #12151a;
-    --color-dark-hover: #1f2937;
-    --color-dark-border: #2d3748;
-
-    /* 라이트 모드 색상 */
-    --color-light-bg: #f1f5f9;
-    --color-light-sidebar: #f8fafc;
-    --color-light-hover: #e5e7eb;
-    --color-light-border: #e5e7eb;
 }
 
 :root {
     --font-pretendard: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
 }
 
 html, body {
@@ -40,228 +22,13 @@ html, body {
     background: #1a1d23;
     color: #fff;
 
-    /* 사이드바 */
-    .sidebar {
-        width: 220px;
-        background: #12151a;
-        display: flex;
-        flex-direction: column;
-        padding: 16px;
-        transition: all 0.3s ease;
-
-        &.collapsed {
-            width: 0;
-            padding: 0;
-            overflow: hidden;
-        }
+    /* 라이트 모드 */
+    &.light-mode {
+        background: #f1f5f9;
+        color: #111827;
     }
 
-    .logo {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 24px;
-    }
-
-    .logo-icon {
-        background: #3b82f6;
-        padding: 8px;
-        border-radius: 8px;
-        font-weight: bold;
-    }
-
-    .logo-text small {
-        display: block;
-        color: #6b7280;
-        font-size: 12px;
-    }
-
-    .nav-menu {
-        flex: 1;
-    }
-
-    .nav-title {
-        color: #9ca3af;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
-    }
-
-    .nav-menu ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    /* 네비게이션 메뉴 아이템 */
-    .nav-item {
-        padding: 8px 10px;
-        border-radius: 6px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 14px;
-        margin-bottom: 2px;
-        color: rgba(255, 255, 255, 0.7);
-
-        i {
-            width: 18px;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        &.active {
-            background: rgba(30, 58, 95, 0.5);
-            color: #fff;
-        }
-
-        &:hover:not(.active) {
-            background: #1f2937;
-            color: #fff;
-        }
-    }
-
-    .sidebar-footer {
-        font-size: 12px;
-        color: #6b7280;
-
-        .link {
-            color: #60a5fa;
-        }
-    }
-
-    /* 메인 컨텐츠 */
-    .content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .content-toolbar {
-        padding: 10px 12px;
-        display: flex;
-        align-items: center;
-
-        > .flex-1 {
-            flex: 1;
-        }
-    }
-
-    .toolbar-spacer {
-        flex: 1;
-    }
-
-    /* 버튼 아이콘 */
-    .btn-icon {
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 4px;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.7);
-
-        &:hover {
-            background: #1f2937;
-            color: #fff;
-        }
-    }
-
-    .toolbar-divider {
-        height: 1px;
-        background: #2d3748;
-    }
-
-    .content-body {
-        flex: 1;
-        padding: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* 업로드 영역 */
-    .upload-area {
-        width: 100%;
-        max-width: 500px;
-    }
-
-    .upload-dropzone {
-        border: 2px dashed #3b82f6;
-        border-radius: 16px;
-        padding: 48px 32px;
-        text-align: center;
-        background: rgba(59, 130, 246, 0.05);
-        transition: all 0.2s ease;
-
-        &:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: #60a5fa;
-        }
-    }
-
-    .upload-icon {
-        color: #3b82f6;
-        margin-bottom: 16px;
-        display: flex;
-        justify-content: center;
-    }
-
-    .upload-title {
-        font-size: 20px;
-        font-weight: 600;
-        margin: 0 0 8px 0;
-    }
-
-    .upload-desc {
-        color: #9ca3af;
-        margin: 0 0 8px 0;
-        font-size: 14px;
-    }
-
-    .upload-formats {
-        color: #6b7280;
-        font-size: 12px;
-        margin-bottom: 24px;
-    }
-
-    .upload-btn {
-        display: inline-block;
-        background: #3b82f6;
-        color: #fff;
-        padding: 10px 24px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s ease;
-
-        &:hover {
-            background: #2563eb;
-        }
-    }
-
-    /* 로딩 상태 */
-    .upload-dropzone.is-loading {
-        pointer-events: none;
-    }
-
-    .upload-loading {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 16px;
-
-        p {
-            color: #9ca3af;
-            font-size: 14px;
-        }
-    }
-
+    /* 스피너 애니메이션 */
     .spinner {
         width: 40px;
         height: 40px;
@@ -277,227 +44,47 @@ html, body {
         }
     }
 
-    /* 라이트 모드 */
-    &.light-mode {
-        background: #f1f5f9;
-        color: #111827;
-
-        .sidebar {
-            background: #f8fafc;
-        }
-
-        .logo-text small {
-            color: #6b7280;
-        }
-
-        .nav-title {
-            color: #6b7280;
-        }
-
-        .nav-item {
-            color: #4b5563;
-
-            &.active {
-                background: #dbeafe;
-                color: #1d4ed8;
-            }
-
-            &:hover:not(.active) {
-                background: #e5e7eb;
-                color: #111827;
-            }
-        }
-
-        .sidebar-footer {
-            color: #6b7280;
-
-            .link {
-                color: #3b82f6;
-            }
-        }
-
-        .btn-icon {
-            color: #4b5563;
-
-            &:hover {
-                background: #e5e7eb;
-                color: #111827;
-            }
-        }
-
-        .toolbar-divider {
-            background: #e5e7eb;
-        }
-    }
-
-    /* 결과 화면 */
-    .result-view {
-        display: flex;
-        flex-direction: column;
-        padding: 24px;
-        align-items: stretch;
-        justify-content: flex-start;
-    }
-
-    .result-header {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-        margin-bottom: 24px;
-    }
-
-    .btn-back {
-        background: transparent;
-        border: 1px solid #4b5563;
-        color: inherit;
-        cursor: pointer;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-
-        &:hover {
-            background: #374151;
-            border-color: #374151;
-        }
-    }
-
-    .file-info h2 {
-        font-size: 18px;
-        margin: 0;
-    }
-
-    .file-info small {
-        color: #9ca3af;
-    }
-
-    /* 통계 카드 */
-    .stats-row {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-
-    .stat-card {
-        background: #1f2937;
-        border-radius: 8px;
-        padding: 16px 24px;
-        min-width: 150px;
-    }
-
-    .stat-label {
-        font-size: 11px;
-        color: #9ca3af;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-    }
-
-    .stat-value {
-        font-size: 24px;
-        font-weight: 600;
-    }
-
-    .stat-percent {
-        font-size: 14px;
-        font-weight: normal;
-    }
-
-    .text-green { color: #22c55e; }
-    .text-red { color: #ef4444; }
-        .text-muted { color: #9ca3af; }
-
     /* 결과 테이블 */
-    .result-table-container {
-        flex: 1;
-        overflow: auto;
-    }
-
     .result-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 14px;
-    }
 
-    .result-table th,
-    .result-table td {
-        padding: 10px 16px;
-        text-align: left;
-        border-bottom: 1px solid #2d3748;
-        height: 48px;
-        vertical-align: middle;
-        box-sizing: border-box;
-    }
-
-    /* 체크박스 컬럼 */
-    .result-table th:first-child,
-    .result-table td:first-child {
-        width: 40px;
-        padding: 10px 8px;
-        text-align: center;
-    }
-
-    /* 확장 버튼 컬럼 */
-    .result-table th:nth-child(2),
-    .result-table td:nth-child(2) {
-        width: 32px;
-        padding: 10px 8px;
-        text-align: center;
-    }
-
-    .result-table th {
-        color: #9ca3af;
-        font-weight: 500;
-        font-size: 12px;
-        text-transform: uppercase;
-    }
-
-    .result-table tbody tr:hover {
-        background: rgba(255,255,255,0.02);
-    }
-
-    .result-table .clickable-row {
-        cursor: pointer;
-    }
-
-    /* 확장 버튼 */
-    .expand-icon {
-        font-size: 10px;
-        color: #9ca3af;
-        cursor: pointer;
-
-        &:hover {
-            color: #fff;
+        th, td {
+            padding: 10px 16px;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+            height: 48px;
+            vertical-align: middle;
+            box-sizing: border-box;
         }
-    }
 
-    /* MPN/MANUFACTURER 컬럼 */
-    .result-table td > div {
-        small {
-            display: block;
-            margin-top: 4px;
+        /* 체크박스 컬럼 */
+        th:first-child,
+        td:first-child {
+            width: 40px;
+            padding: 10px 8px;
+            text-align: center;
         }
-    }
 
-    /* 배지 */
-    .badge {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 500;
-    }
+        /* 확장 버튼 컬럼 */
+        th:nth-child(2),
+        td:nth-child(2) {
+            width: 32px;
+            padding: 10px 8px;
+            text-align: center;
+        }
 
-    .badge-green {
-        background: rgba(34, 197, 94, 0.2);
-        color: #22c55e;
-    }
+        th {
+            color: #9ca3af;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
 
-    .badge-red {
-        background: rgba(239, 68, 68, 0.2);
-        color: #ef4444;
+        tbody tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
     }
 
     /* 커스텀 체크박스 */
@@ -539,125 +126,16 @@ html, body {
         }
     }
 
-    /* 라이트 모드 결과 화면 */
+    /* 라이트 모드 테이블 */
     &.light-mode {
-        .stat-card {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-        }
-
-        .result-table th,
-        .result-table td {
-            border-bottom-color: #e5e7eb;
-        }
-
-        .result-table tbody tr:hover {
-            background: rgba(0,0,0,0.02);
-        }
-
-        .expanded-row {
-            background: #f8fafc;
-
-            td {
+        .result-table {
+            th, td {
                 border-bottom-color: #e5e7eb;
             }
-        }
 
-        .expanded-image {
-            background: #e5e7eb;
-        }
-
-        .detail-row {
-            color: #4b5563;
-
-            &:first-child {
-                color: #1f2937;
+            tbody tr:hover {
+                background: rgba(0,0,0,0.02);
             }
         }
-
-        .category-tag {
-            background: #e5e7eb;
-            color: #4b5563;
-        }
-    }
-
-    /* 확장 상세 영역 */
-    .expanded-row {
-        background: #141820;
-
-        td {
-            padding: 0 !important;
-            border-bottom: 1px solid #2d3748;
-        }
-    }
-
-    .expanded-content {
-        padding: 16px 48px;
-        text-align: left;
-        display: flex;
-        flex-direction: row;
-        gap: 24px;
-        align-items: flex-start;
-    }
-
-    .expanded-image {
-        flex-shrink: 0;
-        width: 80px;
-        height: 80px;
-        background: #1f2937;
-        border-radius: 8px;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
-        .no-image {
-            font-size: 11px;
-            color: #6b7280;
-            text-align: center;
-        }
-    }
-
-    .expanded-details {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .detail-row {
-        font-size: 13px;
-        color: #d1d5db;
-        text-align: left;
-
-        &:first-child {
-            font-size: 14px;
-            color: #e5e7eb;
-        }
-
-        &.categories {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-    }
-
-    .category-tag {
-        background: #2d3748;
-        color: #d1d5db;
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-size: 12px;
-    }
-
-    .stock-badge {
-        color: #22c55e;
-        font-size: 12px;
     }
 }
