@@ -145,7 +145,7 @@ import IconPanelLeft from "@/components/icons/IconPanelLeft.vue";
 import IconSun from "@/components/icons/IconSun.vue";
 import IconMoon from "@/components/icons/IconMoon.vue";
 import IconUpload from "@/components/icons/IconUpload.vue";
-import * as XLSX from 'xlsx';
+import { processFile } from "./services";
 
 export default defineComponent({
     name: 'SpSmartBomV2',
@@ -188,49 +188,12 @@ export default defineComponent({
             fileName.value = '';
         };
 
-        const processFile = async (file: File) => {
+        const handleFile = async (file: File) => {
             isLoading.value = true;
             fileName.value = file.name;
 
             try {
-                const data = await file.arrayBuffer();
-                const workbook = XLSX.read(data, { type: 'array', cellStyles: true, cellFormula: true, cellDates: true, raw: false });
-
-                const allExcelData: any = { fileName: file.name, fileSize: file.size, sheets: [] };
-
-                workbook.SheetNames.forEach((sheetName) => {
-                    const worksheet = workbook.Sheets[sheetName];
-                    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-                    const sheetData: any = { name: sheetName, range: { startRow: range.s.r, endRow: range.e.r, startCol: range.s.c, endCol: range.e.c }, cells: [] };
-
-                    for (let row = range.s.r; row <= range.e.r; row++) {
-                        for (let col = range.s.c; col <= range.e.c; col++) {
-                            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-                            const cell = worksheet[cellAddress];
-                            if (cell) {
-                                sheetData.cells.push({
-                                    address: cellAddress, row, col,
-                                    formatted: cell.w || '', raw: cell.v, type: cell.t || 'z',
-                                    format: cell.z || '', formula: cell.f || '', style: cell.s || null
-                                });
-                            }
-                        }
-                    }
-                    allExcelData.sheets.push(sheetData);
-                });
-
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('excelData', JSON.stringify(allExcelData));
-
-                const response = await fetch(props.params.mlServerUrl || '', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) throw new Error('API 요청 실패');
-
-                const result = await response.json();
+                const { result } = await processFile(file, props.params.mlServerUrl || '');
                 pcbItemList.value = result;
                 viewMode.value = 'result';
             } catch (error) {
@@ -244,12 +207,12 @@ export default defineComponent({
         const handleFileSelect = (event: Event) => {
             const target = event.target as HTMLInputElement;
             const file = target.files?.[0];
-            if (file) processFile(file);
+            if (file) handleFile(file);
         };
 
         const handleDrop = (event: DragEvent) => {
             const file = event.dataTransfer?.files?.[0];
-            if (file) processFile(file);
+            if (file) handleFile(file);
         };
 
         return {
