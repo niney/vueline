@@ -109,26 +109,56 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(item, index) in pcbItemList" :key="index">
-                                <td><input type="checkbox" class="custom-checkbox" /></td>
-                                <td><i class="fas fa-chevron-right"></i></td>
-                                <td>{{ index + 1 }}</td>
-                                <td>{{ getDesignator(item) }}</td>
-                                <td>{{ item.qty || 1 }}</td>
-                                <td>
-                                    <div v-if="item.parts">
-                                        {{ item.parts.partName }}
-                                        <small class="text-muted">{{ item.parts.manufacturerName }}</small>
-                                    </div>
-                                    <div v-else class="text-muted">
-                                        —<br><small>Unknown</small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span v-if="item.parts" class="badge badge-green">Found</span>
-                                    <span v-else class="badge badge-red">Not Found</span>
-                                </td>
-                            </tr>
+                            <template v-for="(item, index) in pcbItemList" :key="index">
+                                <tr class="clickable-row" @click="toggleRow(index)">
+                                    <td @click.stop><input type="checkbox" class="custom-checkbox" /></td>
+                                    <td>
+                                        <i
+                                            class="fas expand-icon"
+                                            :class="expandedRows.has(index) ? 'fa-chevron-down' : 'fa-chevron-right'"
+                                        ></i>
+                                    </td>
+                                    <td>{{ index + 1 }}</td>
+                                    <td>{{ getDesignator(item) }}</td>
+                                    <td>{{ item.qty || 1 }}</td>
+                                    <td>
+                                        <div v-if="item.parts">
+                                            {{ item.parts.partName }}
+                                            <small class="text-muted">{{ item.parts.manufacturerName }}</small>
+                                        </div>
+                                        <div v-else class="text-muted">
+                                            —<br><small>Unknown</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span v-if="item.parts" class="badge badge-green">Found</span>
+                                        <span v-else class="badge badge-red">Not Found</span>
+                                    </td>
+                                </tr>
+                                <!-- 확장 상세 영역 -->
+                                <tr v-if="expandedRows.has(index)" class="expanded-row">
+                                    <td colspan="7">
+                                        <div class="expanded-content">
+                                            <div class="expanded-image">
+                                                <img v-if="item.parts?.serviceType === 'samplepcb' && (item.parts.size === 'AXIAL' || item.parts.size === 'DIP')"
+                                                    :src="`https://www.samplepcb.co.kr/img/pcb/${(item.parts.size || 'dip').toLowerCase()}.jpg`"
+                                                    :alt="item.parts?.partName" />
+                                                <img v-else-if="item.parts?.photoUrl"
+                                                    :src="item.parts.photoUrl"
+                                                    :alt="item.parts?.partName" />
+                                                <div v-else class="no-image">No Image</div>
+                                            </div>
+                                            <div class="expanded-details">
+                                                <div class="detail-row">{{ item.parts?.description || 'No description' }}</div>
+                                                <div v-if="item.parts?.packaging?.field1 || item.parts?.packaging?.field2" class="detail-row">
+                                                    {{ item.parts?.packaging?.field1 || '' }} {{ item.parts?.packaging?.field2 || '' }}
+                                                </div>
+                                                <div v-if="item.reference_value" class="detail-row">{{ item.reference_value }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
@@ -168,6 +198,7 @@ export default defineComponent({
         const fileName = ref('');
         const pcbItemList = ref<PcbItem[]>([]);
         const isLoading = ref(false);
+        const expandedRows = ref<Set<number>>(new Set());
 
         // 통계 (is_pcb=true 기준)
         const pcbItems = computed(() => pcbItemList.value.filter(i => i.is_pcb === true));
@@ -180,6 +211,15 @@ export default defineComponent({
 
         const getDesignator = (item: PcbItem) => {
             return item.reference_prefix || item.number?.[0] || '-';
+        };
+
+        const toggleRow = (index: number) => {
+            if (expandedRows.value.has(index)) {
+                expandedRows.value.delete(index);
+            } else {
+                expandedRows.value.add(index);
+            }
+            expandedRows.value = new Set(expandedRows.value); // reactivity trigger
         };
 
         const goBack = () => {
@@ -217,8 +257,8 @@ export default defineComponent({
 
         return {
             sidebarOpen, darkMode, viewMode, fileName, pcbItemList, isLoading,
-            pcbItems, matchedCount, unmatchedCount, matchedPercent,
-            getDesignator, goBack, handleFileSelect, handleDrop
+            pcbItems, matchedCount, unmatchedCount, matchedPercent, expandedRows,
+            getDesignator, toggleRow, goBack, handleFileSelect, handleDrop
         };
     }
 });
