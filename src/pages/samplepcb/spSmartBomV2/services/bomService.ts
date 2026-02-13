@@ -88,6 +88,21 @@ export const parseExcelFile = (data: ArrayBuffer, file: File): ExcelData => {
                 }
             }
         }
+
+        // 빈 행 제거: 데이터가 있는 마지막 행까지만 유지
+        const nonEmptyRows = new Set<number>();
+        sheetData.cells.forEach((cell) => {
+            if (cell.formatted && cell.formatted.toString().trim() !== '') {
+                nonEmptyRows.add(cell.row);
+            }
+        });
+
+        if (nonEmptyRows.size > 0) {
+            const maxNonEmptyRow = Math.max(...Array.from(nonEmptyRows));
+            sheetData.cells = sheetData.cells.filter((cell) => cell.row <= maxNonEmptyRow);
+            sheetData.range.endRow = maxNonEmptyRow;
+        }
+
         excelData.sheets.push(sheetData);
     });
 
