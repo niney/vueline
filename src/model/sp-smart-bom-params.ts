@@ -264,6 +264,9 @@ export interface SpSmartBomV2Params extends VueCommonParams {
     searchServerUrl?: string;
     mlServerUrl?: string;
     cartApiUrl?: string;
+    onRequestQuote?: (selectedItems: PcbItem[], orderSummary: OrderSummary) => void;
+    onAddToCart?: (selectedItems: PcbItem[], orderSummary: OrderSummary, cartData: CartItem) => void;
+    onSave?: (selectedItems: PcbItem[], orderSummary: OrderSummary, cartData: CartItem) => void;
 }
 
 // 모든 인터페이스 export
