@@ -94,16 +94,21 @@
                     >
                         <i class="fas fa-arrow-left"></i> Back
                     </button>
-                    <div>
+                    <div class="flex-1">
                         <h2 class="text-lg m-0">{{ fileName }}</h2>
                         <small class="text-gray-400">{{ fileName }}</small>
                     </div>
+                    <IconButton
+                        v-if="windowWidth < 1024"
+                        :dark-mode="darkMode"
+                        @click="rightPanelOpen = !rightPanelOpen"
+                    >
+                        <i class="fas fa-chart-bar text-sm"></i>
+                    </IconButton>
                 </div>
 
-                <!-- 테이블 + 오른쪽 패널 -->
-                <div class="flex gap-6 flex-1 overflow-hidden">
-                    <!-- 테이블 (왼쪽) -->
-                    <div class="flex-1 overflow-auto">
+                <!-- 테이블 -->
+                <div class="flex-1 overflow-auto" :class="rightPanelOpen ? 'pr-80' : ''">
                         <table class="result-table">
                             <thead>
                                 <tr>
@@ -298,147 +303,220 @@
                                 </template>
                             </tbody>
                         </table>
+                </div>
+
+                <!-- 오른쪽 패널 (fixed) -->
+                <aside
+                    v-show="rightPanelOpen"
+                    class="right-panel fixed top-[146px] right-6 w-72 max-h-[calc(100vh-140px)] overflow-y-auto flex flex-col gap-3 z-30 p-4 rounded-xl border backdrop-blur-md"
+                    :class="darkMode
+                        ? 'bg-[#0d1017]/90 border-white/[0.06] shadow-2xl shadow-black/40'
+                        : 'bg-white/95 border-gray-200 shadow-xl shadow-gray-300/30'"
+                >
+                    <!-- 섹션 헤더: Analysis -->
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-1.5 h-4 rounded-full bg-blue-500"></div>
+                        <span
+                            class="text-[10px] font-bold tracking-[0.15em] uppercase"
+                            :class="darkMode ? 'text-gray-400' : 'text-gray-500'"
+                        >Analysis</span>
                     </div>
 
-                    <!-- 오른쪽 패널 -->
-                    <aside class="shrink-0 w-72 flex flex-col gap-4 overflow-y-auto">
-                        <!-- 통계 카드 -->
-                        <StatCard
-                            label="TOTAL LINES"
-                            :value="pcbItems.length"
-                            :dark-mode="darkMode"
-                        />
-                        <StatCard
-                            label="MATCHED"
-                            :value="matchedCount"
-                            :percent="matchedPercent"
-                            variant="success"
-                            :dark-mode="darkMode"
-                        />
-                        <StatCard
-                            label="UNMATCHED"
-                            :value="unmatchedCount"
-                            variant="error"
-                            :dark-mode="darkMode"
-                        />
+                    <!-- 통계 카드 -->
+                    <StatCard
+                        label="TOTAL LINES"
+                        :value="pcbItems.length"
+                        :dark-mode="darkMode"
+                    />
+                    <StatCard
+                        label="MATCHED"
+                        :value="matchedCount"
+                        :percent="matchedPercent"
+                        variant="success"
+                        :dark-mode="darkMode"
+                    />
+                    <StatCard
+                        label="UNMATCHED"
+                        :value="unmatchedCount"
+                        variant="error"
+                        :dark-mode="darkMode"
+                    />
 
-                        <!-- 단가 및 납기정보 -->
+                    <!-- 구분선 -->
+                    <div class="my-1">
+                        <div class="h-px" :class="darkMode ? 'bg-white/[0.06]' : 'bg-gray-200'"></div>
+                    </div>
+
+                    <!-- 단가 및 납기정보 -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-1.5 h-4 rounded-full bg-cyan-500"></div>
+                            <span
+                                class="text-[10px] font-bold tracking-[0.15em] uppercase"
+                                :class="darkMode ? 'text-gray-400' : 'text-gray-500'"
+                            >Order Info</span>
+                        </div>
                         <div
-                            class="rounded-lg p-4 border"
-                            :class="darkMode ? 'bg-[#1a1d24] border-gray-700' : 'bg-white border-gray-200'"
+                            class="rounded-lg p-3 space-y-2.5 text-[13px] border"
+                            :class="darkMode ? 'bg-white/[0.03] border-white/[0.04]' : 'bg-gray-50/80 border-gray-100'"
                         >
-                            <div class="flex items-center mb-3">
-                                <i class="fas fa-info-circle text-blue-500 mr-2 text-sm"></i>
-                                <h3 class="text-sm font-medium m-0" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">단가 및 납기정보</h3>
+                            <div class="flex justify-between items-center">
+                                <span :class="darkMode ? 'text-gray-500' : 'text-gray-400'">구매수량</span>
+                                <span
+                                    class="font-semibold tabular-nums"
+                                    :class="darkMode ? 'text-gray-200' : 'text-gray-700'"
+                                >1 Set</span>
                             </div>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span :class="darkMode ? 'text-gray-400' : 'text-gray-600'">구매수량</span>
-                                    <span class="font-medium" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">1 Set</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span :class="darkMode ? 'text-gray-400' : 'text-gray-600'">예상납기</span>
-                                    <span class="font-medium" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">{{ orderSummary.expectedDelivery }}</span>
-                                </div>
+                            <div class="flex justify-between items-center">
+                                <span :class="darkMode ? 'text-gray-500' : 'text-gray-400'">예상납기</span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                                    <span
+                                        class="font-semibold"
+                                        :class="darkMode ? 'text-cyan-400' : 'text-cyan-600'"
+                                    >{{ orderSummary.expectedDelivery }}</span>
+                                </span>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- 추정 예상금액 -->
+                    <!-- 구분선 -->
+                    <div class="my-1">
+                        <div class="h-px" :class="darkMode ? 'bg-white/[0.06]' : 'bg-gray-200'"></div>
+                    </div>
+
+                    <!-- 추정 예상금액 -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-1.5 h-4 rounded-full bg-amber-500"></div>
+                            <span
+                                class="text-[10px] font-bold tracking-[0.15em] uppercase"
+                                :class="darkMode ? 'text-gray-400' : 'text-gray-500'"
+                            >Estimate</span>
+                        </div>
+
                         <div
-                            class="rounded-lg p-4 border"
-                            :class="darkMode ? 'bg-[#1a1d24] border-gray-700' : 'bg-white border-gray-200'"
+                            class="rounded-lg p-3 space-y-2 text-[13px] border"
+                            :class="darkMode ? 'bg-white/[0.03] border-white/[0.04]' : 'bg-gray-50/80 border-gray-100'"
                         >
-                            <div class="flex items-center mb-3">
-                                <i class="fas fa-calculator text-blue-500 mr-2 text-sm"></i>
-                                <h3 class="text-sm font-medium m-0" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">추정 예상금액</h3>
+                            <!-- 합계 -->
+                            <div class="flex justify-between items-center">
+                                <span :class="darkMode ? 'text-gray-500' : 'text-gray-400'">합계</span>
+                                <span
+                                    class="font-semibold tabular-nums"
+                                    :class="darkMode ? 'text-gray-200' : 'text-gray-700'"
+                                >{{ formatPrice(totalAmount) }}<span class="text-[11px] font-normal ml-0.5" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">원</span></span>
                             </div>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span :class="darkMode ? 'text-gray-400' : 'text-gray-600'">합계</span>
-                                    <span class="font-medium" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">₩{{ formatPrice(totalAmount) }}원</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span :class="darkMode ? 'text-gray-400' : 'text-gray-600'">운송료</span>
-                                    <template v-if="isEditMode">
-                                        <div class="flex items-center">
-                                            <span class="mr-1" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">₩</span>
-                                            <input
-                                                type="number"
-                                                v-model.number="orderSummary.shippingFee"
-                                                class="w-20 px-2 py-1 border rounded text-right text-sm"
-                                                :class="darkMode ? 'bg-gray-800 border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-800'"
-                                                min="0"
-                                            />
-                                            <span class="ml-1" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">원</span>
-                                        </div>
-                                    </template>
-                                    <template v-else>
-                                        <span class="font-medium" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">₩{{ formatPrice(orderSummary.shippingFee) }}원</span>
-                                    </template>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span :class="darkMode ? 'text-gray-400' : 'text-gray-600'">구매대행 관리비</span>
-                                    <template v-if="isEditMode">
-                                        <div class="flex items-center">
-                                            <span class="mr-1" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">₩</span>
-                                            <input
-                                                type="number"
-                                                v-model.number="orderSummary.managementFee"
-                                                class="w-20 px-2 py-1 border rounded text-right text-sm"
-                                                :class="darkMode ? 'bg-gray-800 border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-800'"
-                                                min="0"
-                                            />
-                                            <span class="ml-1" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">원</span>
-                                        </div>
-                                    </template>
-                                    <template v-else>
-                                        <span class="font-medium" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">₩{{ formatPrice(orderSummary.managementFee) }}원</span>
-                                    </template>
-                                </div>
-                                <div class="flex justify-between mt-2 pt-2 border-t" :class="darkMode ? 'border-gray-600' : 'border-gray-200'">
-                                    <span class="font-medium" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">
-                                        최종합계
-                                        <span class="text-xs" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">(부가세 미포함)</span>
-                                    </span>
-                                    <span class="font-bold text-base text-blue-400">₩{{ formatPrice(finalAmount) }}원</span>
-                                </div>
-                            </div>
-                            <div class="flex flex-col gap-2 mt-4 pt-3 border-t" :class="darkMode ? 'border-gray-600' : 'border-gray-200'">
+
+                            <!-- 운송료 -->
+                            <div class="flex justify-between items-center">
+                                <span :class="darkMode ? 'text-gray-500' : 'text-gray-400'">운송료</span>
                                 <template v-if="isEditMode">
-                                    <button
-                                        class="w-full px-3 py-2 rounded-md text-sm font-medium transition-colors border cursor-pointer"
-                                        :class="darkMode
-                                            ? 'bg-green-600/20 border-green-500/50 text-green-400 hover:bg-green-600/30'
-                                            : 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'"
-                                        @click="handleSave"
-                                    >
-                                        <i class="fas fa-save mr-1"></i> 저장하기
-                                    </button>
+                                    <div class="flex items-center gap-1">
+                                        <input
+                                            type="number"
+                                            v-model.number="orderSummary.shippingFee"
+                                            class="w-20 px-2 py-1 rounded-md text-right text-[13px] tabular-nums outline-none transition-colors"
+                                            :class="darkMode
+                                                ? 'bg-white/[0.06] border border-white/10 text-gray-200 focus:border-blue-500/50'
+                                                : 'bg-white border border-gray-200 text-gray-700 focus:border-blue-400'"
+                                            min="0"
+                                        />
+                                        <span class="text-[11px]" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">원</span>
+                                    </div>
                                 </template>
                                 <template v-else>
-                                    <button
-                                        class="w-full px-3 py-2 rounded-md text-sm font-medium transition-colors border cursor-pointer"
-                                        :class="darkMode
-                                            ? 'bg-blue-600/20 border-blue-500/50 text-blue-400 hover:bg-blue-600/30'
-                                            : 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'"
-                                        @click="handleRequestQuote"
-                                    >
-                                        <i class="fas fa-file-invoice mr-1"></i> 견적요청
-                                    </button>
-                                    <button
-                                        class="w-full px-3 py-2 rounded-md text-sm font-medium transition-colors border cursor-pointer"
-                                        :class="darkMode
-                                            ? 'bg-orange-600/20 border-orange-500/50 text-orange-400 hover:bg-orange-600/30'
-                                            : 'bg-orange-50 border-orange-300 text-orange-700 hover:bg-orange-100'"
-                                        @click="handleAddToCart"
-                                    >
-                                        <i class="fas fa-shopping-cart mr-1"></i> 장바구니
-                                    </button>
+                                    <span
+                                        class="font-semibold tabular-nums"
+                                        :class="darkMode ? 'text-gray-200' : 'text-gray-700'"
+                                    >{{ formatPrice(orderSummary.shippingFee) }}<span class="text-[11px] font-normal ml-0.5" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">원</span></span>
+                                </template>
+                            </div>
+
+                            <!-- 구매대행 관리비 -->
+                            <div class="flex justify-between items-center">
+                                <span :class="darkMode ? 'text-gray-500' : 'text-gray-400'">관리비</span>
+                                <template v-if="isEditMode">
+                                    <div class="flex items-center gap-1">
+                                        <input
+                                            type="number"
+                                            v-model.number="orderSummary.managementFee"
+                                            class="w-20 px-2 py-1 rounded-md text-right text-[13px] tabular-nums outline-none transition-colors"
+                                            :class="darkMode
+                                                ? 'bg-white/[0.06] border border-white/10 text-gray-200 focus:border-blue-500/50'
+                                                : 'bg-white border border-gray-200 text-gray-700 focus:border-blue-400'"
+                                            min="0"
+                                        />
+                                        <span class="text-[11px]" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">원</span>
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <span
+                                        class="font-semibold tabular-nums"
+                                        :class="darkMode ? 'text-gray-200' : 'text-gray-700'"
+                                    >{{ formatPrice(orderSummary.managementFee) }}<span class="text-[11px] font-normal ml-0.5" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">원</span></span>
                                 </template>
                             </div>
                         </div>
-                    </aside>
-                </div>
+
+                        <!-- 최종합계 (히어로 금액) -->
+                        <div
+                            class="mt-3 rounded-lg p-3 border"
+                            :class="darkMode
+                                ? 'bg-gradient-to-br from-blue-500/[0.08] to-indigo-500/[0.04] border-blue-500/15'
+                                : 'bg-gradient-to-br from-blue-50 to-indigo-50/50 border-blue-200/60'"
+                        >
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[11px] font-medium" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
+                                    최종합계
+                                    <span class="text-[10px]" :class="darkMode ? 'text-gray-600' : 'text-gray-400'">(VAT 별도)</span>
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <span
+                                    class="text-lg font-bold tabular-nums tracking-tight"
+                                    :class="darkMode ? 'text-blue-400' : 'text-blue-600'"
+                                >{{ formatPrice(finalAmount) }}</span>
+                                <span class="text-xs font-medium ml-0.5" :class="darkMode ? 'text-blue-400/60' : 'text-blue-500/60'">원</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 액션 버튼 -->
+                    <div class="flex flex-col gap-2 mt-1">
+                        <template v-if="isEditMode">
+                            <button
+                                class="w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer border-0"
+                                :class="darkMode
+                                    ? 'bg-emerald-500 text-white hover:bg-emerald-400 shadow-lg shadow-emerald-500/20'
+                                    : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20'"
+                                @click="handleSave"
+                            >
+                                <i class="fas fa-save mr-1.5"></i> 저장하기
+                            </button>
+                        </template>
+                        <template v-else>
+                            <button
+                                class="w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer border-0"
+                                :class="darkMode
+                                    ? 'bg-blue-500 text-white hover:bg-blue-400 shadow-lg shadow-blue-500/25'
+                                    : 'bg-blue-500 text-white hover:bg-blue-600 shadow-md shadow-blue-500/20'"
+                                @click="handleRequestQuote"
+                            >
+                                <i class="fas fa-file-invoice mr-1.5"></i> 견적요청
+                            </button>
+                            <button
+                                class="w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer border"
+                                :class="darkMode
+                                    ? 'bg-amber-500/15 border-amber-500/30 text-amber-400 hover:bg-amber-500/25 hover:border-amber-500/40'
+                                    : 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-400 shadow-sm'"
+                                @click="handleAddToCart"
+                            >
+                                <i class="fas fa-shopping-cart mr-1.5"></i> 장바구니
+                            </button>
+                        </template>
+                    </div>
+                </aside>
             </section>
         </main>
     </div>
@@ -446,7 +524,7 @@
 
 <script lang="ts">
 import "./sp-smart-bom-v2-style.scss";
-import { defineComponent, PropType, ref, computed } from 'vue';
+import { defineComponent, PropType, ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { SpSmartBomV2Params, PcbItem, OrderSummary } from "@/model/sp-smart-bom-params";
 import IconPanelLeft from "@/components/icons/IconPanelLeft.vue";
 import IconSun from "@/components/icons/IconSun.vue";
@@ -503,6 +581,8 @@ export default defineComponent({
         const expandedRows = ref<Set<number>>(new Set());
         const selectedRows = ref<Set<number>>(new Set());
         const isEditMode = ref(false);
+        const rightPanelOpen = ref(window.innerWidth >= 1024);
+        const windowWidth = ref(window.innerWidth);
 
         const orderSummary = ref<OrderSummary>({
             fileName: '',
@@ -534,6 +614,14 @@ export default defineComponent({
             if (pcbItems.value.length === 0) return 0;
             return Math.round((matchedCount.value / pcbItems.value.length) * 100);
         });
+
+        // 반응형 오른쪽 패널
+        const onResize = () => {
+            windowWidth.value = window.innerWidth;
+            rightPanelOpen.value = windowWidth.value >= 1024;
+        };
+        onMounted(() => window.addEventListener('resize', onResize));
+        onBeforeUnmount(() => window.removeEventListener('resize', onResize));
 
         // 추정 예상금액 계산
         const totalAmount = computed(() => {
@@ -698,7 +786,9 @@ export default defineComponent({
             getSelectBoxOptions, getSelectedPkgIndex, handlePkgSelect,
             // 주문 요약 관련
             orderSummary, totalAmount, finalAmount, isEditMode,
-            handleRequestQuote, handleAddToCart, handleSave
+            handleRequestQuote, handleAddToCart, handleSave,
+            // 오른쪽 패널
+            rightPanelOpen, windowWidth
         };
     }
 });

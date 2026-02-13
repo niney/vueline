@@ -136,6 +136,23 @@ html, body {
         }
     }
 
+    /* 오른쪽 패널 */
+    .right-panel {
+        &::-webkit-scrollbar {
+            width: 4px;
+        }
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.08);
+            border-radius: 4px;
+            &:hover {
+                background: rgba(255,255,255,0.15);
+            }
+        }
+    }
+
     /* 라이트 모드 테이블 */
     &.light-mode {
         .result-table {
@@ -145,6 +162,15 @@ html, body {
 
             tbody tr:hover {
                 background: rgba(0,0,0,0.02);
+            }
+        }
+
+        .right-panel {
+            &::-webkit-scrollbar-thumb {
+                background: rgba(0,0,0,0.1);
+                &:hover {
+                    background: rgba(0,0,0,0.2);
+                }
             }
         }
     }
