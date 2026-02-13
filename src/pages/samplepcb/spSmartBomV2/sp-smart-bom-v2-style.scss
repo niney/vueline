@@ -121,6 +121,16 @@ html, body {
             }
         }
 
+        &:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #374151;
+
+            &:hover {
+                border-color: #374151;
+            }
+        }
+
         &:focus {
             outline: none;
         }

@@ -139,7 +139,15 @@
                         <tbody>
                             <template v-for="(item, index) in pcbItemList" :key="index">
                                 <tr class="cursor-pointer" @click="toggleRow(index)">
-                                    <td @click.stop><input type="checkbox" class="custom-checkbox" /></td>
+                                    <td @click.stop>
+                                        <input
+                                            type="checkbox"
+                                            class="custom-checkbox"
+                                            :checked="selectedRows.has(index)"
+                                            :disabled="item.is_pcb !== true"
+                                            @change="toggleSelect(index)"
+                                        />
+                                    </td>
                                     <td>
                                         <i
                                             class="fas text-[10px] text-gray-400 cursor-pointer hover:text-white"
@@ -370,6 +378,7 @@ export default defineComponent({
         const pcbItemList = ref<PcbItem[]>([]);
         const isLoading = ref(false);
         const expandedRows = ref<Set<number>>(new Set());
+        const selectedRows = ref<Set<number>>(new Set());
 
         const navItems = [
             { icon: 'fas fa-file-alt', label: 'BOMs', active: true },
@@ -390,6 +399,15 @@ export default defineComponent({
 
         const getDesignator = (item: PcbItem) => {
             return item.reference_prefix || item.number?.[0] || '-';
+        };
+
+        const toggleSelect = (index: number) => {
+            if (selectedRows.value.has(index)) {
+                selectedRows.value.delete(index);
+            } else {
+                selectedRows.value.add(index);
+            }
+            selectedRows.value = new Set(selectedRows.value);
         };
 
         const toggleRow = (index: number) => {
@@ -416,6 +434,12 @@ export default defineComponent({
                 // 각 아이템에 대해 초기 가격 설정
                 result.forEach(item => updateSelectedPrice(item));
                 pcbItemList.value = result;
+                // is_pcb=true인 항목을 초기 선택 상태로 설정
+                const selected = new Set<number>();
+                result.forEach((item, index) => {
+                    if (item.is_pcb === true) selected.add(index);
+                });
+                selectedRows.value = selected;
                 viewMode.value = 'result';
             } catch (error) {
                 console.error('파일 처리 오류:', error);
@@ -483,8 +507,8 @@ export default defineComponent({
 
         return {
             sidebarOpen, darkMode, viewMode, fileName, pcbItemList, isLoading,
-            pcbItems, matchedCount, unmatchedCount, matchedPercent, expandedRows,
-            navItems, getDesignator, toggleRow, goBack, handleFileSelect, handleDrop,
+            pcbItems, matchedCount, unmatchedCount, matchedPercent, expandedRows, selectedRows,
+            navItems, getDesignator, toggleSelect, toggleRow, goBack, handleFileSelect, handleDrop,
             // 가격 관련 (서비스에서 import)
             formatPrice, getPriceOptions, getPriceSteps, updateQty,
             isActiveRange, isActiveSingleRange, isUnderMoq, getMoq, getCalculatedPrice,
