@@ -21,6 +21,15 @@
         if (window._spSmartBomV2app) {
             window._spSmartBomV2app.bootstrap({
                 // V2 콜백 함수 설정
+                onRequestQuote: function (selectedItems, orderSummary) {
+                    console.log('[견적요청] selectedItems:', selectedItems);
+                    console.log('[견적요청] orderSummary:', orderSummary);
+                },
+                onAddToCart: function (selectedItems, orderSummary, cartData) {
+                    console.log('[장바구니] selectedItems:', selectedItems);
+                    console.log('[장바구니] orderSummary:', orderSummary);
+                    console.log('[장바구니] cartData:', cartData);
+                }
             });
             clearTimeout(timeoutId);
             return;
