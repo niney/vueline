@@ -174,7 +174,7 @@
                                 <!-- 확장 상세 영역 -->
                                 <tr v-if="expandedRows.has(index)" :class="darkMode ? 'bg-[#141820]' : 'bg-slate-50'">
                                     <td colspan="7" class="!p-0" :class="darkMode ? 'border-b border-gray-700' : 'border-b border-gray-200'">
-                                        <div class="flex gap-6 items-start p-4 pl-12">
+                                        <div class="flex gap-6 items-start p-5">
                                             <div
                                                 class="shrink-0 w-20 h-20 rounded-lg overflow-hidden flex items-center justify-center"
                                                 :class="darkMode ? 'bg-gray-800' : 'bg-gray-200'"
@@ -204,6 +204,103 @@
                                                     {{ item.reference_value }}
                                                 </div>
                                             </div>
+                                            <!-- 가격 정보 영역 (오른쪽) -->
+                                            <div class="shrink-0 text-right">
+                                                <div v-if="item.parts?.prices?.length" class="space-y-2">
+                                                    <!-- SelectBox + 수량 입력 + 계산된 가격 -->
+                                                    <div class="flex items-center justify-end gap-3 flex-nowrap">
+                                                        <SelectBox
+                                                            :options="getSelectBoxOptions(item)"
+                                                            :model-value="getSelectedPkgIndex(item)"
+                                                            placeholder="패키지 선택"
+                                                            :dark-mode="darkMode"
+                                                            :show-empty-option="true"
+                                                            empty-option-label="패키지 선택"
+                                                            @update:model-value="handlePkgSelect(item, $event)"
+                                                        />
+                                                        <NumberInput
+                                                            :model-value="item.selectedPrice?.qty || ''"
+                                                            placeholder="수량"
+                                                            :min="1"
+                                                            :dark-mode="darkMode"
+                                                            @update:model-value="updateQty(item, $event)"
+                                                        />
+                                                        <div v-if="item.selectedPrice" class="text-sm text-right">
+                                                            <div v-if="isUnderMoq(item)" class="text-red-500 text-xs">
+                                                                MOQ: {{ getMoq(item) }}개
+                                                            </div>
+                                                            <div class="font-medium" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">
+                                                                {{ formatPrice(getCalculatedPrice(item)) }}원
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        v-for="(price, pIndex) in item.parts.prices"
+                                                        :key="pIndex"
+                                                        v-show="!item.selectedPrice?.pkg || item.selectedPrice?.pkg === price.pkg"
+                                                        class="text-sm"
+                                                    >
+                                                        <div class="flex justify-end gap-3 mb-1" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
+                                                            <span>{{ price.pkg }}</span>
+                                                            <span>MOQ: {{ price.moq }}</span>
+                                                            <span>재고: {{ price.stock }}</span>
+                                                        </div>
+                                                        <div class="border-t mb-2" :class="darkMode ? 'border-gray-600' : 'border-gray-200'"></div>
+                                                        <div class="grid grid-cols-3 gap-x-4 gap-y-1">
+                                                            <div
+                                                                v-for="(step, sIndex) in price.priceSteps"
+                                                                :key="sIndex"
+                                                                class="flex justify-end gap-1 whitespace-nowrap"
+                                                                :class="[
+                                                                    isActiveRange(item, price, step)
+                                                                        ? 'text-blue-400 font-medium'
+                                                                        : darkMode ? 'text-gray-400' : 'text-gray-500'
+                                                                ]"
+                                                            >
+                                                                <span>{{ step.breakQuantity }}개 이상:</span>
+                                                                <span class="text-right">{{ formatPrice(step.unitPrice) }}원</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-else-if="item.parts?.price1" class="space-y-2">
+                                                    <!-- 수량 입력 + 계산된 가격 -->
+                                                    <div class="flex items-center justify-end gap-3 flex-nowrap">
+                                                        <NumberInput
+                                                            :model-value="item.selectedPrice?.qty || ''"
+                                                            placeholder="수량"
+                                                            :min="1"
+                                                            :dark-mode="darkMode"
+                                                            @update:model-value="updateQty(item, $event)"
+                                                        />
+                                                        <div v-if="item.selectedPrice" class="text-sm text-right">
+                                                            <div v-if="isUnderMoq(item)" class="text-red-500 text-xs">
+                                                                MOQ: {{ getMoq(item) }}개
+                                                            </div>
+                                                            <div class="font-medium" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">
+                                                                {{ formatPrice(getCalculatedPrice(item)) }}원
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
+                                                        <div class="flex justify-end gap-3 mb-1">
+                                                            <span>{{ item.parts.partsPackaging || 'Cut Tape (CT)' }}</span>
+                                                            <span>MOQ: {{ item.parts.moq || 1 }}</span>
+                                                            <span>재고: 보유</span>
+                                                        </div>
+                                                        <div
+                                                            class="flex justify-end gap-2"
+                                                            :class="isActiveSingleRange(item) ? 'text-blue-400 font-medium' : ''"
+                                                        >
+                                                            <span>1개 이상:</span>
+                                                            <span>{{ formatPrice(item.parts.price1) }}원</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-else class="text-sm" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">
+                                                    가격 정보 없음
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -224,11 +321,26 @@ import IconPanelLeft from "@/components/icons/IconPanelLeft.vue";
 import IconSun from "@/components/icons/IconSun.vue";
 import IconMoon from "@/components/icons/IconMoon.vue";
 import IconUpload from "@/components/icons/IconUpload.vue";
-import { processFile } from "./services";
+import {
+    processFile,
+    updateSelectedPrice,
+    formatPrice,
+    getPriceOptions,
+    getPriceSteps,
+    updateItemQty,
+    isActiveRange,
+    isActiveSingleRange,
+    isUnderMoq,
+    getMoq,
+    getCalculatedPrice
+} from "./services";
 import NavItem from "./components/NavItem.vue";
 import StatCard from "./components/StatCard.vue";
 import IconButton from "./components/IconButton.vue";
 import StatusBadge from "./components/StatusBadge.vue";
+import SelectBox from "./components/SelectBox.vue";
+import type { SelectOption } from "./components/SelectBox.vue";
+import NumberInput from "./components/NumberInput.vue";
 
 export default defineComponent({
     name: 'SpSmartBomV2',
@@ -240,7 +352,9 @@ export default defineComponent({
         NavItem,
         StatCard,
         IconButton,
-        StatusBadge
+        StatusBadge,
+        SelectBox,
+        NumberInput
     },
     props: {
         params: {
@@ -299,6 +413,8 @@ export default defineComponent({
 
             try {
                 const { result } = await processFile(file, props.params.mlServerUrl || '');
+                // 각 아이템에 대해 초기 가격 설정
+                result.forEach(item => updateSelectedPrice(item));
                 pcbItemList.value = result;
                 viewMode.value = 'result';
             } catch (error) {
@@ -320,10 +436,60 @@ export default defineComponent({
             if (file) handleFile(file);
         };
 
+        // SelectBox 옵션 생성
+        const getSelectBoxOptions = (item: PcbItem): SelectOption[] => {
+            const prices = getPriceOptions(item);
+            return prices.map((price, index) => ({
+                value: `${index}`,
+                label: `${price.pkg} ${getPriceSteps(price)}개 이상`,
+                data: price
+            }));
+        };
+
+        // SelectBox 선택값 가져오기
+        const getSelectedPkgIndex = (item: PcbItem): string => {
+            if (!item.selectedPrice?.pkg || !item.parts?.prices) return '';
+            const prices = getPriceOptions(item);
+            const index = prices.findIndex(p => p.pkg === item.selectedPrice?.pkg);
+            return index >= 0 ? `${index}` : '';
+        };
+
+        // SelectBox 선택 변경 핸들러 (V1과 동일하게 breakQuantity를 qty로 설정)
+        const handlePkgSelect = (item: PcbItem, value: string) => {
+            if (!value || !item.parts?.prices) return;
+            const prices = getPriceOptions(item);
+            const index = parseInt(value);
+            if (index >= 0 && index < prices.length) {
+                const price = prices[index];
+                const step = price.priceSteps?.[0];
+                const qty = step?.breakQuantity || price.moq || 1;
+                item.selectedPrice = {
+                    pkg: price.pkg,
+                    breakQuantity: qty,
+                    unitPrice: step?.unitPrice || 0,
+                    qty: qty,
+                    moq: price.moq,
+                    stock: price.stock
+                };
+            }
+        };
+
+        const updateQty = (item: PcbItem, qty: number | string) => {
+            const numQty = typeof qty === 'string' ? parseInt(qty) : qty;
+            if (numQty > 0) {
+                updateItemQty(item, numQty);
+            }
+        };
+
         return {
             sidebarOpen, darkMode, viewMode, fileName, pcbItemList, isLoading,
             pcbItems, matchedCount, unmatchedCount, matchedPercent, expandedRows,
-            navItems, getDesignator, toggleRow, goBack, handleFileSelect, handleDrop
+            navItems, getDesignator, toggleRow, goBack, handleFileSelect, handleDrop,
+            // 가격 관련 (서비스에서 import)
+            formatPrice, getPriceOptions, getPriceSteps, updateQty,
+            isActiveRange, isActiveSingleRange, isUnderMoq, getMoq, getCalculatedPrice,
+            // SelectBox 관련
+            getSelectBoxOptions, getSelectedPkgIndex, handlePkgSelect
         };
     }
 });
