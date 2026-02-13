@@ -642,6 +642,7 @@ export default defineComponent({
         };
 
         const handleRequestQuote = () => {
+            orderSummary.value.fileName = fileName.value;
             orderSummary.value.totalAmount = totalAmount.value;
             orderSummary.value.finalAmount = finalAmount.value;
             const selectedItems = getSelectedItems();
@@ -651,6 +652,7 @@ export default defineComponent({
         };
 
         const handleAddToCart = () => {
+            orderSummary.value.fileName = fileName.value;
             orderSummary.value.totalAmount = totalAmount.value;
             orderSummary.value.finalAmount = finalAmount.value;
             const selectedItems = getSelectedItems();
@@ -660,6 +662,7 @@ export default defineComponent({
         };
 
         const handleSave = () => {
+            orderSummary.value.fileName = fileName.value;
             orderSummary.value.totalAmount = totalAmount.value;
             orderSummary.value.finalAmount = finalAmount.value;
             const selectedItems = getSelectedItems();
