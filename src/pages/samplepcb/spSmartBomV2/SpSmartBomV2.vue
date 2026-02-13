@@ -572,7 +572,7 @@ export default defineComponent({
         }
     },
     setup(props) {
-        const sidebarOpen = ref(true);
+        const sidebarOpen = ref(window.innerWidth >= 768);
         const darkMode = ref(true);
         const viewMode = ref<'upload' | 'result'>('upload');
         const fileName = ref('');
@@ -615,9 +615,10 @@ export default defineComponent({
             return Math.round((matchedCount.value / pcbItems.value.length) * 100);
         });
 
-        // 반응형 오른쪽 패널
+        // 반응형 사이드바 + 오른쪽 패널
         const onResize = () => {
             windowWidth.value = window.innerWidth;
+            sidebarOpen.value = windowWidth.value >= 768;
             rightPanelOpen.value = windowWidth.value >= 1024;
         };
         onMounted(() => window.addEventListener('resize', onResize));
