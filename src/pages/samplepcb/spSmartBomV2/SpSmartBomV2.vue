@@ -108,415 +108,34 @@
                 </div>
 
                 <!-- 테이블 -->
-                <div class="flex-1 overflow-auto" :class="rightPanelOpen ? 'pr-80' : ''">
-                        <table class="result-table">
-                            <thead>
-                                <tr>
-                                    <th><input type="checkbox" class="custom-checkbox" /></th>
-                                    <th></th>
-                                    <th>LINE</th>
-                                    <th>DESIGNATOR</th>
-                                    <th>QTY</th>
-                                    <th>MPN / MANUFACTURER</th>
-                                    <th>MATCH</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template v-for="(item, index) in pcbItemList" :key="index">
-                                    <tr class="cursor-pointer" @click="toggleRow(index)">
-                                        <td @click.stop>
-                                            <input
-                                                type="checkbox"
-                                                class="custom-checkbox"
-                                                :checked="selectedRows.has(index)"
-                                                :disabled="item.is_pcb !== true"
-                                                @change="toggleSelect(index)"
-                                            />
-                                        </td>
-                                        <td>
-                                            <i
-                                                class="fas text-[10px] text-gray-400 cursor-pointer hover:text-white"
-                                                :class="expandedRows.has(index) ? 'fa-chevron-down' : 'fa-chevron-right'"
-                                            ></i>
-                                        </td>
-                                        <td>{{ index + 1 }}</td>
-                                        <td>{{ getDesignator(item) }}</td>
-                                        <td>{{ item.is_pcb ? (item.qty || 1) : '-' }}</td>
-                                        <td>
-                                            <div v-if="item.parts">
-                                                {{ item.parts.partName }}
-                                                <small class="block mt-1 text-gray-400">{{ item.parts.manufacturerName }}</small>
-                                            </div>
-                                            <div v-else-if="!item.is_pcb"></div>
-                                            <div v-else class="text-gray-400">
-                                                —<br><small>Unknown</small>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <template v-if="item.is_pcb">
-                                                <StatusBadge
-                                                    v-if="item.parts"
-                                                    label="Found"
-                                                    variant="success"
-                                                />
-                                                <StatusBadge
-                                                    v-else
-                                                    label="Not Found"
-                                                    variant="error"
-                                                />
-                                            </template>
-                                        </td>
-                                    </tr>
-                                    <!-- 확장 상세 영역 -->
-                                    <tr v-if="expandedRows.has(index)" :class="darkMode ? 'bg-[#141820]' : 'bg-slate-50'">
-                                        <td colspan="7" class="!p-0" :class="darkMode ? 'border-b border-gray-700' : 'border-b border-gray-200'">
-                                            <div class="flex gap-6 items-start p-5">
-                                                <div
-                                                    class="shrink-0 w-20 h-20 rounded-lg overflow-hidden flex items-center justify-center"
-                                                    :class="darkMode ? 'bg-gray-800' : 'bg-gray-200'"
-                                                >
-                                                    <img
-                                                        v-if="item.parts?.serviceType === 'samplepcb' && (item.parts.size === 'AXIAL' || item.parts.size === 'DIP')"
-                                                        :src="`https://www.samplepcb.co.kr/img/pcb/${(item.parts.size || 'dip').toLowerCase()}.jpg`"
-                                                        :alt="item.parts?.partName"
-                                                        class="max-w-full max-h-full object-contain"
-                                                    />
-                                                    <img
-                                                        v-else-if="item.parts?.photoUrl"
-                                                        :src="item.parts.photoUrl"
-                                                        :alt="item.parts?.partName"
-                                                        class="max-w-full max-h-full object-contain"
-                                                    />
-                                                    <div v-else class="text-[11px] text-gray-500 text-center">No Image</div>
-                                                </div>
-                                                <div class="flex-1 flex flex-col gap-2 items-start text-left">
-                                                    <div class="text-sm" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">
-                                                        {{ item.parts?.description || 'No description' }}
-                                                    </div>
-                                                    <div v-if="item.parts?.packaging?.field1 || item.parts?.packaging?.field2" class="text-[13px]" :class="darkMode ? 'text-gray-300' : 'text-gray-600'">
-                                                        {{ item.parts?.packaging?.field1 || '' }} {{ item.parts?.packaging?.field2 || '' }}
-                                                    </div>
-                                                    <div v-if="item.reference_value" class="text-[13px]" :class="darkMode ? 'text-gray-300' : 'text-gray-600'">
-                                                        {{ item.reference_value }}
-                                                    </div>
-                                                </div>
-                                                <!-- 가격 정보 영역 (오른쪽) -->
-                                                <div class="shrink-0 text-right">
-                                                    <div v-if="item.parts?.prices?.length" class="space-y-2">
-                                                        <!-- SelectBox + 수량 입력 + 계산된 가격 -->
-                                                        <div class="flex items-center justify-end gap-3 flex-nowrap">
-                                                            <SelectBox
-                                                                :options="getSelectBoxOptions(item)"
-                                                                :model-value="getSelectedPkgIndex(item)"
-                                                                placeholder="패키지 선택"
-                                                                :dark-mode="darkMode"
-                                                                :show-empty-option="true"
-                                                                empty-option-label="패키지 선택"
-                                                                @update:model-value="handlePkgSelect(item, $event)"
-                                                            />
-                                                            <NumberInput
-                                                                :model-value="item.selectedPrice?.qty || ''"
-                                                                placeholder="수량"
-                                                                :min="1"
-                                                                :dark-mode="darkMode"
-                                                                @update:model-value="updateQty(item, $event)"
-                                                            />
-                                                            <div v-if="item.selectedPrice" class="text-sm text-right">
-                                                                <div v-if="isUnderMoq(item)" class="text-red-500 text-xs">
-                                                                    MOQ: {{ getMoq(item) }}개
-                                                                </div>
-                                                                <div class="font-medium" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">
-                                                                    {{ formatPrice(getCalculatedPrice(item)) }}원
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div
-                                                            v-for="(price, pIndex) in item.parts.prices"
-                                                            :key="pIndex"
-                                                            v-show="!item.selectedPrice?.pkg || item.selectedPrice?.pkg === price.pkg"
-                                                            class="text-sm"
-                                                        >
-                                                            <div class="flex justify-end gap-3 mb-1" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
-                                                                <span>{{ price.pkg }}</span>
-                                                                <span>MOQ: {{ price.moq }}</span>
-                                                                <span>재고: {{ price.stock }}</span>
-                                                            </div>
-                                                            <div class="border-t mb-2" :class="darkMode ? 'border-gray-600' : 'border-gray-200'"></div>
-                                                            <div class="grid grid-cols-3 gap-x-4 gap-y-1">
-                                                                <div
-                                                                    v-for="(step, sIndex) in price.priceSteps"
-                                                                    :key="sIndex"
-                                                                    class="flex justify-end gap-1 whitespace-nowrap"
-                                                                    :class="[
-                                                                        isActiveRange(item, price, step)
-                                                                            ? 'text-blue-400 font-medium'
-                                                                            : darkMode ? 'text-gray-400' : 'text-gray-500'
-                                                                    ]"
-                                                                >
-                                                                    <span>{{ step.breakQuantity }}개 이상:</span>
-                                                                    <span class="text-right">{{ formatPrice(step.unitPrice) }}원</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div v-else-if="item.parts?.price1" class="space-y-2">
-                                                        <!-- 수량 입력 + 계산된 가격 -->
-                                                        <div class="flex items-center justify-end gap-3 flex-nowrap">
-                                                            <NumberInput
-                                                                :model-value="item.selectedPrice?.qty || ''"
-                                                                placeholder="수량"
-                                                                :min="1"
-                                                                :dark-mode="darkMode"
-                                                                @update:model-value="updateQty(item, $event)"
-                                                            />
-                                                            <div v-if="item.selectedPrice" class="text-sm text-right">
-                                                                <div v-if="isUnderMoq(item)" class="text-red-500 text-xs">
-                                                                    MOQ: {{ getMoq(item) }}개
-                                                                </div>
-                                                                <div class="font-medium" :class="darkMode ? 'text-gray-200' : 'text-gray-800'">
-                                                                    {{ formatPrice(getCalculatedPrice(item)) }}원
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
-                                                            <div class="flex justify-end gap-3 mb-1">
-                                                                <span>{{ item.parts.partsPackaging || 'Cut Tape (CT)' }}</span>
-                                                                <span>MOQ: {{ item.parts.moq || 1 }}</span>
-                                                                <span>재고: 보유</span>
-                                                            </div>
-                                                            <div
-                                                                class="flex justify-end gap-2"
-                                                                :class="isActiveSingleRange(item) ? 'text-blue-400 font-medium' : ''"
-                                                            >
-                                                                <span>1개 이상:</span>
-                                                                <span>{{ formatPrice(item.parts.price1) }}원</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div v-else class="text-sm" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">
-                                                        가격 정보 없음
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                </div>
+                <BomResultTable
+                    :pcb-item-list="pcbItemList"
+                    :dark-mode="darkMode"
+                    :expanded-rows="expandedRows"
+                    :selected-rows="selectedRows"
+                    :right-panel-open="rightPanelOpen"
+                    @toggle-row="toggleRow"
+                    @toggle-select="toggleSelect"
+                />
 
                 <!-- 오른쪽 패널 (fixed) -->
-                <aside
-                    v-show="rightPanelOpen"
-                    class="right-panel fixed top-[146px] right-6 w-72 max-h-[calc(100vh-140px)] overflow-y-auto flex flex-col gap-3 z-30 p-4 rounded-xl border backdrop-blur-md"
-                    :class="darkMode
-                        ? 'bg-[#0d1017]/90 border-white/[0.06] shadow-2xl shadow-black/40'
-                        : 'bg-white/95 border-gray-200 shadow-xl shadow-gray-300/30'"
-                >
-                    <!-- 섹션 헤더: Analysis -->
-                    <div class="flex items-center gap-2 mb-1">
-                        <div class="w-1.5 h-4 rounded-full bg-blue-500"></div>
-                        <span
-                            class="text-[10px] font-bold tracking-[0.15em] uppercase"
-                            :class="darkMode ? 'text-gray-400' : 'text-gray-500'"
-                        >Analysis</span>
-                    </div>
-
-                    <!-- 통계 카드 -->
-                    <StatCard
-                        label="TOTAL LINES"
-                        :value="pcbItems.length"
-                        :dark-mode="darkMode"
-                    />
-                    <StatCard
-                        label="MATCHED"
-                        :value="matchedCount"
-                        :percent="matchedPercent"
-                        variant="success"
-                        :dark-mode="darkMode"
-                    />
-                    <StatCard
-                        label="UNMATCHED"
-                        :value="unmatchedCount"
-                        variant="error"
-                        :dark-mode="darkMode"
-                    />
-
-                    <!-- 구분선 -->
-                    <div class="my-1">
-                        <div class="h-px" :class="darkMode ? 'bg-white/[0.06]' : 'bg-gray-200'"></div>
-                    </div>
-
-                    <!-- 단가 및 납기정보 -->
-                    <div>
-                        <div class="flex items-center gap-2 mb-3">
-                            <div class="w-1.5 h-4 rounded-full bg-cyan-500"></div>
-                            <span
-                                class="text-[10px] font-bold tracking-[0.15em] uppercase"
-                                :class="darkMode ? 'text-gray-400' : 'text-gray-500'"
-                            >Order Info</span>
-                        </div>
-                        <div
-                            class="rounded-lg p-3 space-y-2.5 text-[13px] border"
-                            :class="darkMode ? 'bg-white/[0.03] border-white/[0.04]' : 'bg-gray-50/80 border-gray-100'"
-                        >
-                            <div class="flex justify-between items-center">
-                                <span :class="darkMode ? 'text-gray-500' : 'text-gray-400'">구매수량</span>
-                                <span
-                                    class="font-semibold tabular-nums"
-                                    :class="darkMode ? 'text-gray-200' : 'text-gray-700'"
-                                >1 Set</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span :class="darkMode ? 'text-gray-500' : 'text-gray-400'">예상납기</span>
-                                <span class="inline-flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                                    <span
-                                        class="font-semibold"
-                                        :class="darkMode ? 'text-cyan-400' : 'text-cyan-600'"
-                                    >{{ orderSummary.expectedDelivery }}</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 구분선 -->
-                    <div class="my-1">
-                        <div class="h-px" :class="darkMode ? 'bg-white/[0.06]' : 'bg-gray-200'"></div>
-                    </div>
-
-                    <!-- 추정 예상금액 -->
-                    <div>
-                        <div class="flex items-center gap-2 mb-3">
-                            <div class="w-1.5 h-4 rounded-full bg-amber-500"></div>
-                            <span
-                                class="text-[10px] font-bold tracking-[0.15em] uppercase"
-                                :class="darkMode ? 'text-gray-400' : 'text-gray-500'"
-                            >Estimate</span>
-                        </div>
-
-                        <div
-                            class="rounded-lg p-3 space-y-2 text-[13px] border"
-                            :class="darkMode ? 'bg-white/[0.03] border-white/[0.04]' : 'bg-gray-50/80 border-gray-100'"
-                        >
-                            <!-- 합계 -->
-                            <div class="flex justify-between items-center">
-                                <span :class="darkMode ? 'text-gray-500' : 'text-gray-400'">합계</span>
-                                <span
-                                    class="font-semibold tabular-nums"
-                                    :class="darkMode ? 'text-gray-200' : 'text-gray-700'"
-                                >{{ formatPrice(totalAmount) }}<span class="text-[11px] font-normal ml-0.5" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">원</span></span>
-                            </div>
-
-                            <!-- 운송료 -->
-                            <div class="flex justify-between items-center">
-                                <span :class="darkMode ? 'text-gray-500' : 'text-gray-400'">운송료</span>
-                                <template v-if="isEditMode">
-                                    <div class="flex items-center gap-1">
-                                        <input
-                                            type="number"
-                                            v-model.number="orderSummary.shippingFee"
-                                            class="w-20 px-2 py-1 rounded-md text-right text-[13px] tabular-nums outline-none transition-colors"
-                                            :class="darkMode
-                                                ? 'bg-white/[0.06] border border-white/10 text-gray-200 focus:border-blue-500/50'
-                                                : 'bg-white border border-gray-200 text-gray-700 focus:border-blue-400'"
-                                            min="0"
-                                        />
-                                        <span class="text-[11px]" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">원</span>
-                                    </div>
-                                </template>
-                                <template v-else>
-                                    <span
-                                        class="font-semibold tabular-nums"
-                                        :class="darkMode ? 'text-gray-200' : 'text-gray-700'"
-                                    >{{ formatPrice(orderSummary.shippingFee) }}<span class="text-[11px] font-normal ml-0.5" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">원</span></span>
-                                </template>
-                            </div>
-
-                            <!-- 구매대행 관리비 -->
-                            <div class="flex justify-between items-center">
-                                <span :class="darkMode ? 'text-gray-500' : 'text-gray-400'">관리비</span>
-                                <template v-if="isEditMode">
-                                    <div class="flex items-center gap-1">
-                                        <input
-                                            type="number"
-                                            v-model.number="orderSummary.managementFee"
-                                            class="w-20 px-2 py-1 rounded-md text-right text-[13px] tabular-nums outline-none transition-colors"
-                                            :class="darkMode
-                                                ? 'bg-white/[0.06] border border-white/10 text-gray-200 focus:border-blue-500/50'
-                                                : 'bg-white border border-gray-200 text-gray-700 focus:border-blue-400'"
-                                            min="0"
-                                        />
-                                        <span class="text-[11px]" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">원</span>
-                                    </div>
-                                </template>
-                                <template v-else>
-                                    <span
-                                        class="font-semibold tabular-nums"
-                                        :class="darkMode ? 'text-gray-200' : 'text-gray-700'"
-                                    >{{ formatPrice(orderSummary.managementFee) }}<span class="text-[11px] font-normal ml-0.5" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">원</span></span>
-                                </template>
-                            </div>
-                        </div>
-
-                        <!-- 최종합계 (히어로 금액) -->
-                        <div
-                            class="mt-3 rounded-lg p-3 border"
-                            :class="darkMode
-                                ? 'bg-gradient-to-br from-blue-500/[0.08] to-indigo-500/[0.04] border-blue-500/15'
-                                : 'bg-gradient-to-br from-blue-50 to-indigo-50/50 border-blue-200/60'"
-                        >
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-[11px] font-medium" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
-                                    최종합계
-                                    <span class="text-[10px]" :class="darkMode ? 'text-gray-600' : 'text-gray-400'">(VAT 별도)</span>
-                                </span>
-                            </div>
-                            <div class="text-right">
-                                <span
-                                    class="text-lg font-bold tabular-nums tracking-tight"
-                                    :class="darkMode ? 'text-blue-400' : 'text-blue-600'"
-                                >{{ formatPrice(finalAmount) }}</span>
-                                <span class="text-xs font-medium ml-0.5" :class="darkMode ? 'text-blue-400/60' : 'text-blue-500/60'">원</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 액션 버튼 -->
-                    <div class="flex flex-col gap-2 mt-1">
-                        <template v-if="isEditMode">
-                            <button
-                                class="w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer border-0"
-                                :class="darkMode
-                                    ? 'bg-emerald-500 text-white hover:bg-emerald-400 shadow-lg shadow-emerald-500/20'
-                                    : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20'"
-                                @click="handleSave"
-                            >
-                                <i class="fas fa-save mr-1.5"></i> 저장하기
-                            </button>
-                        </template>
-                        <template v-else>
-                            <button
-                                class="w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer border-0"
-                                :class="darkMode
-                                    ? 'bg-blue-500 text-white hover:bg-blue-400 shadow-lg shadow-blue-500/25'
-                                    : 'bg-blue-500 text-white hover:bg-blue-600 shadow-md shadow-blue-500/20'"
-                                @click="handleRequestQuote"
-                            >
-                                <i class="fas fa-file-invoice mr-1.5"></i> 견적요청
-                            </button>
-                            <button
-                                class="w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer border"
-                                :class="darkMode
-                                    ? 'bg-amber-500/15 border-amber-500/30 text-amber-400 hover:bg-amber-500/25 hover:border-amber-500/40'
-                                    : 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-400 shadow-sm'"
-                                @click="handleAddToCart"
-                            >
-                                <i class="fas fa-shopping-cart mr-1.5"></i> 장바구니
-                            </button>
-                        </template>
-                    </div>
-                </aside>
+                <OrderPanel
+                    :dark-mode="darkMode"
+                    :right-panel-open="rightPanelOpen"
+                    :pcb-items="pcbItems"
+                    :matched-count="matchedCount"
+                    :matched-percent="matchedPercent"
+                    :unmatched-count="unmatchedCount"
+                    :order-summary="orderSummary"
+                    :total-amount="totalAmount"
+                    :final-amount="finalAmount"
+                    :is-edit-mode="isEditMode"
+                    @request-quote="handleRequestQuote"
+                    @add-to-cart="handleAddToCart"
+                    @save="handleSave"
+                    @update:shipping-fee="orderSummary.shippingFee = $event"
+                    @update:management-fee="orderSummary.managementFee = $event"
+                />
             </section>
         </main>
     </div>
@@ -530,26 +149,11 @@ import IconPanelLeft from "@/components/icons/IconPanelLeft.vue";
 import IconSun from "@/components/icons/IconSun.vue";
 import IconMoon from "@/components/icons/IconMoon.vue";
 import IconUpload from "@/components/icons/IconUpload.vue";
-import {
-    processFile,
-    updateSelectedPrice,
-    formatPrice,
-    getPriceOptions,
-    getPriceSteps,
-    updateItemQty,
-    isActiveRange,
-    isActiveSingleRange,
-    isUnderMoq,
-    getMoq,
-    getCalculatedPrice
-} from "./services";
+import { processFile, updateSelectedPrice, getCalculatedPrice } from "./services";
 import NavItem from "./components/NavItem.vue";
-import StatCard from "./components/StatCard.vue";
 import IconButton from "./components/IconButton.vue";
-import StatusBadge from "./components/StatusBadge.vue";
-import SelectBox from "./components/SelectBox.vue";
-import type { SelectOption } from "./components/SelectBox.vue";
-import NumberInput from "./components/NumberInput.vue";
+import BomResultTable from "./components/BomResultTable.vue";
+import OrderPanel from "./components/OrderPanel.vue";
 
 export default defineComponent({
     name: 'SpSmartBomV2',
@@ -559,11 +163,9 @@ export default defineComponent({
         IconMoon,
         IconUpload,
         NavItem,
-        StatCard,
         IconButton,
-        StatusBadge,
-        SelectBox,
-        NumberInput
+        BomResultTable,
+        OrderPanel
     },
     props: {
         params: {
@@ -668,10 +270,6 @@ export default defineComponent({
             }
         };
 
-        const getDesignator = (item: PcbItem) => {
-            return item.reference_prefix || item.number?.[0] || '-';
-        };
-
         const toggleSelect = (index: number) => {
             if (selectedRows.value.has(index)) {
                 selectedRows.value.delete(index);
@@ -739,60 +337,10 @@ export default defineComponent({
             if (file) handleFile(file);
         };
 
-        // SelectBox 옵션 생성
-        const getSelectBoxOptions = (item: PcbItem): SelectOption[] => {
-            const prices = getPriceOptions(item);
-            return prices.map((price, index) => ({
-                value: `${index}`,
-                label: `${price.pkg} ${getPriceSteps(price)}개 이상`,
-                data: price
-            }));
-        };
-
-        // SelectBox 선택값 가져오기
-        const getSelectedPkgIndex = (item: PcbItem): string => {
-            if (!item.selectedPrice?.pkg || !item.parts?.prices) return '';
-            const prices = getPriceOptions(item);
-            const index = prices.findIndex(p => p.pkg === item.selectedPrice?.pkg);
-            return index >= 0 ? `${index}` : '';
-        };
-
-        // SelectBox 선택 변경 핸들러 (V1과 동일하게 breakQuantity를 qty로 설정)
-        const handlePkgSelect = (item: PcbItem, value: string) => {
-            if (!value || !item.parts?.prices) return;
-            const prices = getPriceOptions(item);
-            const index = parseInt(value);
-            if (index >= 0 && index < prices.length) {
-                const price = prices[index];
-                const step = price.priceSteps?.[0];
-                const qty = step?.breakQuantity || price.moq || 1;
-                item.selectedPrice = {
-                    pkg: price.pkg,
-                    breakQuantity: qty,
-                    unitPrice: step?.unitPrice || 0,
-                    qty: qty,
-                    moq: price.moq,
-                    stock: price.stock
-                };
-            }
-        };
-
-        const updateQty = (item: PcbItem, qty: number | string) => {
-            const numQty = typeof qty === 'string' ? parseInt(qty) : qty;
-            if (numQty > 0) {
-                updateItemQty(item, numQty);
-            }
-        };
-
         return {
             sidebarOpen, darkMode, viewMode, fileName, pcbItemList, isLoading,
             pcbItems, matchedCount, unmatchedCount, matchedPercent, expandedRows, selectedRows,
-            navItems, getDesignator, toggleSelect, toggleRow, goBack, handleFileSelect, handleDrop,
-            // 가격 관련 (서비스에서 import)
-            formatPrice, getPriceOptions, getPriceSteps, updateQty,
-            isActiveRange, isActiveSingleRange, isUnderMoq, getMoq, getCalculatedPrice,
-            // SelectBox 관련
-            getSelectBoxOptions, getSelectedPkgIndex, handlePkgSelect,
+            navItems, toggleSelect, toggleRow, goBack, handleFileSelect, handleDrop,
             // 주문 요약 관련
             orderSummary, totalAmount, finalAmount, isEditMode,
             handleRequestQuote, handleAddToCart, handleSave,
