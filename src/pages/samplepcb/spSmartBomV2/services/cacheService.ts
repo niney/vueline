@@ -1,4 +1,4 @@
-import { PcbItem } from "@/model/sp-smart-bom-params";
+import { PcbItem, BomUploadFileInfo } from "@/model/sp-smart-bom-params";
 
 const STORAGE_KEY = 'spSmartBomV2_cache';
 
@@ -7,6 +7,7 @@ interface CacheData {
     contentHash: string;
     excelData: any;
     result: PcbItem[];
+    fileInfo?: BomUploadFileInfo | null;
     timestamp: number;
 }
 
@@ -22,12 +23,13 @@ export const generateHash = async (data: ArrayBuffer): Promise<string> => {
 /**
  * 캐시 저장
  */
-export const saveToCache = (name: string, hash: string, excelData: any, result: PcbItem[]): void => {
+export const saveToCache = (name: string, hash: string, excelData: any, result: PcbItem[], fileInfo?: BomUploadFileInfo | null): void => {
     const cacheData: CacheData = {
         fileName: name,
         contentHash: hash,
         excelData,
         result,
+        fileInfo: fileInfo || null,
         timestamp: Date.now()
     };
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(cacheData));
@@ -36,14 +38,19 @@ export const saveToCache = (name: string, hash: string, excelData: any, result: 
 /**
  * 캐시 불러오기 (파일명 + 해시 일치 시)
  */
-export const loadFromCache = (name: string, hash: string): PcbItem[] | null => {
+export interface CacheResult {
+    result: PcbItem[];
+    fileInfo: BomUploadFileInfo | null;
+}
+
+export const loadFromCache = (name: string, hash: string): CacheResult | null => {
     const cached = sessionStorage.getItem(STORAGE_KEY);
     if (!cached) return null;
 
     try {
         const data: CacheData = JSON.parse(cached);
         if (data.fileName === name && data.contentHash === hash) {
-            return data.result;
+            return { result: data.result, fileInfo: data.fileInfo || null };
         }
     } catch (e) {
         console.error('캐시 파싱 오류:', e);

@@ -209,6 +209,23 @@ export interface OrderSummary {
     finalAmount: number;
 }
 
+export interface BomUploadFileInfo {
+    uploadFileName: string;
+    originFileName: string;
+    pathToken: string;
+    size: number;
+}
+
+export interface OrderSummaryV2 {
+    fileInfo: BomUploadFileInfo | null;
+    quantity: number;
+    expectedDelivery: string;
+    totalAmount: number;
+    shippingFee: number;
+    managementFee: number;
+    finalAmount: number;
+}
+
 interface CartItem {
     ct_id: string;
     it_id: string;
@@ -264,9 +281,9 @@ export interface SpSmartBomV2Params extends VueCommonParams {
     searchServerUrl?: string;
     mlServerUrl?: string;
     cartApiUrl?: string;
-    onRequestQuote?: (selectedItems: PcbItem[], orderSummary: OrderSummary) => void;
-    onAddToCart?: (selectedItems: PcbItem[], orderSummary: OrderSummary, cartData: CartItem) => void;
-    onSave?: (selectedItems: PcbItem[], orderSummary: OrderSummary, cartData: CartItem) => void;
+    onRequestQuote?: (selectedItems: PcbItem[], orderSummary: OrderSummaryV2) => void;
+    onAddToCart?: (selectedItems: PcbItem[], orderSummary: OrderSummaryV2, cartData: CartItem) => void;
+    onSave?: (selectedItems: PcbItem[], orderSummary: OrderSummaryV2, cartData: CartItem) => void;
 }
 
 // 모든 인터페이스 export

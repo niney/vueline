@@ -525,7 +525,7 @@
 <script lang="ts">
 import "./sp-smart-bom-v2-style.scss";
 import { defineComponent, PropType, ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { SpSmartBomV2Params, PcbItem, OrderSummary } from "@/model/sp-smart-bom-params";
+import { SpSmartBomV2Params, PcbItem, OrderSummaryV2 } from "@/model/sp-smart-bom-params";
 import IconPanelLeft from "@/components/icons/IconPanelLeft.vue";
 import IconSun from "@/components/icons/IconSun.vue";
 import IconMoon from "@/components/icons/IconMoon.vue";
@@ -584,8 +584,8 @@ export default defineComponent({
         const rightPanelOpen = ref(window.innerWidth >= 1024);
         const windowWidth = ref(window.innerWidth);
 
-        const orderSummary = ref<OrderSummary>({
-            fileName: '',
+        const orderSummary = ref<OrderSummaryV2>({
+            fileInfo: null,
             quantity: 1,
             expectedDelivery: '2주',
             shippingFee: 30000,
@@ -642,7 +642,6 @@ export default defineComponent({
         };
 
         const handleRequestQuote = () => {
-            orderSummary.value.fileName = fileName.value;
             orderSummary.value.totalAmount = totalAmount.value;
             orderSummary.value.finalAmount = finalAmount.value;
             const selectedItems = getSelectedItems();
@@ -652,7 +651,6 @@ export default defineComponent({
         };
 
         const handleAddToCart = () => {
-            orderSummary.value.fileName = fileName.value;
             orderSummary.value.totalAmount = totalAmount.value;
             orderSummary.value.finalAmount = finalAmount.value;
             const selectedItems = getSelectedItems();
@@ -662,7 +660,6 @@ export default defineComponent({
         };
 
         const handleSave = () => {
-            orderSummary.value.fileName = fileName.value;
             orderSummary.value.totalAmount = totalAmount.value;
             orderSummary.value.finalAmount = finalAmount.value;
             const selectedItems = getSelectedItems();
@@ -697,6 +694,7 @@ export default defineComponent({
             viewMode.value = 'upload';
             pcbItemList.value = [];
             fileName.value = '';
+            orderSummary.value.fileInfo = null;
         };
 
         const handleFile = async (file: File) => {
@@ -704,16 +702,23 @@ export default defineComponent({
             fileName.value = file.name;
 
             try {
-                const { result } = await processFile(file, props.params.mlServerUrl || '');
-                // 각 아이템에 대해 초기 가격 설정
+                // BOM 분석 + 파일 업로드 (캐시 확인 포함)
+                const { result, fileInfo } = await processFile(file, props.params.mlServerUrl || '');
+
+                // 분석 결과 처리
                 result.forEach(item => updateSelectedPrice(item));
                 pcbItemList.value = result;
+
                 // is_pcb=true인 항목을 초기 선택 상태로 설정
                 const selected = new Set<number>();
                 result.forEach((item, index) => {
                     if (item.is_pcb === true) selected.add(index);
                 });
                 selectedRows.value = selected;
+
+                // fileInfo 저장
+                orderSummary.value.fileInfo = fileInfo;
+
                 viewMode.value = 'result';
             } catch (error) {
                 console.error('파일 처리 오류:', error);

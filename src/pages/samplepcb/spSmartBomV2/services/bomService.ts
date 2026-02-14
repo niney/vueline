@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
-import { PcbItem } from "@/model/sp-smart-bom-params";
+import { PcbItem, BomUploadFileInfo } from "@/model/sp-smart-bom-params";
 import { generateHash, loadFromCache, saveToCache } from "./cacheService";
+import { FILE_SERVER_URL } from "@/app-constants";
 
 export interface ExcelData {
     fileName: string;
@@ -34,6 +35,7 @@ export interface CellData {
 export interface ProcessResult {
     result: PcbItem[];
     fromCache: boolean;
+    fileInfo: BomUploadFileInfo | null;
 }
 
 /**
@@ -140,7 +142,7 @@ export const processFile = async (file: File, apiUrl: string): Promise<ProcessRe
     const cachedResult = loadFromCache(file.name, contentHash);
     if (cachedResult) {
         console.log('캐시에서 결과 로드:', file.name);
-        return { result: cachedResult, fromCache: true };
+        return { result: cachedResult.result, fromCache: true, fileInfo: cachedResult.fileInfo };
     }
 
     // 엑셀 파싱
@@ -149,9 +151,46 @@ export const processFile = async (file: File, apiUrl: string): Promise<ProcessRe
     // API 호출
     const result = await analyzeBom(file, excelData, apiUrl);
 
-    // 캐시 저장
-    saveToCache(file.name, contentHash, excelData, result);
+    // 파일 서버에 업로드
+    let fileInfo: BomUploadFileInfo | null = null;
+    try {
+        const uploadResult = await uploadBomFile(file);
+        console.log('[BOM 파일 업로드] 성공:', uploadResult);
+        if (uploadResult?.result && uploadResult.data?.length > 0) {
+            fileInfo = uploadResult.data[0];
+        }
+    } catch (err) {
+        console.error('[BOM 파일 업로드] 실패:', err);
+    }
+
+    // 캐시 저장 (fileInfo 포함)
+    saveToCache(file.name, contentHash, excelData, result, fileInfo);
     console.log('캐시 저장 완료:', file.name);
 
-    return { result, fromCache: false };
+    return { result, fromCache: false, fileInfo };
+};
+
+/**
+ * BOM 파일 업로드 (파일 서버에 저장)
+ */
+export interface BomUploadResponse {
+    result: boolean;
+    data: BomUploadFileInfo[];
+}
+
+export const uploadBomFile = async (file: File): Promise<BomUploadResponse> => {
+    const form = new FormData();
+    form.append('serviceType', 'bom');
+    form.append('files', file, file.name);
+
+    const response = await fetch(`${FILE_SERVER_URL}/api/uploadFileByAnonymous`, {
+        method: 'POST',
+        body: form
+    });
+
+    if (!response.ok) {
+        throw new Error(`업로드 실패: ${response.statusText}`);
+    }
+
+    return response.json();
 };
