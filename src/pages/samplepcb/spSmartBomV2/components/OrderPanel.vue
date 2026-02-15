@@ -1,11 +1,14 @@
 <template>
     <aside
         v-show="rightPanelOpen"
-        class="right-panel fixed top-[146px] right-6 w-72 max-h-[calc(100vh-140px)] overflow-y-auto flex flex-col gap-3 z-30 p-4 rounded-xl border backdrop-blur-md"
+        class="right-panel fixed top-[146px] right-6 w-72 max-h-[calc(100vh-140px)] flex flex-col z-30 p-4 rounded-xl border backdrop-blur-md"
         :class="darkMode
             ? 'bg-[#0d1017]/90 border-white/[0.06] shadow-2xl shadow-black/40'
             : 'bg-white/95 border-gray-200 shadow-xl shadow-gray-300/30'"
     >
+        <!-- 스크롤 영역 -->
+        <div class="flex-1 overflow-y-auto flex flex-col gap-3 min-h-0">
+
         <!-- 섹션 헤더: Analysis -->
         <div class="flex items-center gap-2 mb-1">
             <div class="w-1.5 h-4 rounded-full bg-blue-500"></div>
@@ -177,8 +180,10 @@
             </div>
         </div>
 
-        <!-- 액션 버튼 -->
-        <div class="flex flex-col gap-2 mt-1">
+        </div><!-- /스크롤 영역 -->
+
+        <!-- 액션 버튼 (항상 하단 고정) -->
+        <div class="flex flex-col gap-2 pt-3 shrink-0">
             <template v-if="isEditMode">
                 <button
                     class="w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer border-0"
