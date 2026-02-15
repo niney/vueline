@@ -1,6 +1,6 @@
 <template>
     <div
-        class="stat-card relative overflow-hidden rounded-lg px-4 py-3"
+        class="stat-card relative rounded-lg px-3 py-1.5"
         :class="[
             darkMode ? 'bg-white/[0.04]' : 'bg-white shadow-sm',
             variantBorderClass
@@ -9,11 +9,11 @@
         <div class="flex items-center justify-between gap-2">
             <div class="flex-1 min-w-0">
                 <div
-                    class="text-[10px] font-semibold tracking-[0.1em] uppercase mb-1"
+                    class="text-[10px] font-semibold tracking-[0.1em] uppercase leading-tight"
                     :class="darkMode ? 'text-gray-500' : 'text-gray-400'"
                 >{{ label }}</div>
                 <div class="flex items-baseline gap-1.5">
-                    <span class="text-xl font-bold tabular-nums" :class="valueClass">{{ value }}</span>
+                    <span class="text-lg font-bold tabular-nums leading-snug" :class="valueClass">{{ value }}</span>
                     <span
                         v-if="percent !== undefined"
                         class="text-xs font-medium tabular-nums"
@@ -22,7 +22,7 @@
                 </div>
             </div>
             <div
-                class="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
+                class="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
                 :class="iconBgClass"
             >
                 <i class="text-xs" :class="iconClass"></i>
