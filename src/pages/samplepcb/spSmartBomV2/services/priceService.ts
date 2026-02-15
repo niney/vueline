@@ -1,4 +1,4 @@
-import { PcbItem, Price } from "@/model/sp-smart-bom-params";
+import { PcbItem, Price, MarginSummary } from "@/model/sp-smart-bom-params";
 
 // 패키지 우선순위
 const PKG_PRIORITY = ['Cut', 'Digi', 'Bulk', 'Tape'];
@@ -182,4 +182,65 @@ export const getMoq = (item: PcbItem): number => {
 export const getCalculatedPrice = (item: PcbItem): number => {
     if (!item.selectedPrice) return 0;
     return item.selectedPrice.unitPrice * item.selectedPrice.qty;
+};
+
+/**
+ * 원가 (단가)
+ */
+export const getCostPrice = (item: PcbItem): number => {
+    return item.selectedPrice?.unitPrice || item.parts?.price1 || 0;
+};
+
+/**
+ * 판매가 (단가) - priceOverride 우선
+ */
+export const getSalePrice = (item: PcbItem): number => {
+    if (item.priceOverride?.unitPrice != null) {
+        return item.priceOverride.unitPrice;
+    }
+    return getCostPrice(item);
+};
+
+/**
+ * 마진율 (%)
+ */
+export const getMarginRate = (item: PcbItem): number => {
+    const cost = getCostPrice(item);
+    const sale = getSalePrice(item);
+    if (cost === 0) return 0;
+    return ((sale - cost) / cost) * 100;
+};
+
+/**
+ * 선택 항목의 마진 요약
+ */
+export const calculateMarginSummary = (items: PcbItem[], selectedRows: Set<number>): MarginSummary => {
+    let totalCost = 0;
+    let totalSale = 0;
+
+    items.forEach((item, idx) => {
+        if (!selectedRows.has(idx) || !item.selectedPrice) return;
+        const qty = item.selectedPrice.qty;
+        totalCost += getCostPrice(item) * qty;
+        totalSale += getSalePrice(item) * qty;
+    });
+
+    const totalMargin = totalSale - totalCost;
+    const marginPercent = totalCost > 0 ? (totalMargin / totalCost) * 100 : 0;
+
+    return { totalCost, totalMargin, marginPercent };
+};
+
+/**
+ * 가격 오버라이드 적용
+ */
+export const applyPriceOverride = (item: PcbItem, unitPrice: number): void => {
+    item.priceOverride = { unitPrice, appliedAt: new Date().toISOString() };
+};
+
+/**
+ * 가격 오버라이드 제거
+ */
+export const removePriceOverride = (item: PcbItem): void => {
+    item.priceOverride = undefined;
 };

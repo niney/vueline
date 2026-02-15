@@ -85,56 +85,84 @@
 
             <!-- 결과 화면 -->
             <section v-else class="flex-1 flex flex-col p-6">
-                <!-- 헤더 -->
-                <div class="flex items-center gap-6 mb-6">
-                    <button
-                        class="bg-transparent border border-gray-600 cursor-pointer text-sm flex items-center gap-2 px-4 py-2 rounded-md transition-all hover:bg-gray-700 hover:border-gray-700"
-                        :class="darkMode ? 'text-white' : 'text-gray-900'"
-                        @click="goBack"
-                    >
-                        <i class="fas fa-arrow-left"></i> Back
-                    </button>
-                    <div class="flex-1">
-                        <h2 class="text-lg m-0">{{ fileName }}</h2>
-                        <small class="text-gray-400">{{ fileName }}</small>
+                <!-- 일반 사용자 뷰 -->
+                <template v-if="!isEditMode">
+                    <!-- 헤더 -->
+                    <div class="flex items-center gap-6 mb-6">
+                        <button
+                            class="bg-transparent border border-gray-600 cursor-pointer text-sm flex items-center gap-2 px-4 py-2 rounded-md transition-all hover:bg-gray-700 hover:border-gray-700"
+                            :class="darkMode ? 'text-white' : 'text-gray-900'"
+                            @click="goBack"
+                        >
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <div class="flex-1">
+                            <h2 class="text-lg m-0">{{ fileName }}</h2>
+                            <small class="text-gray-400">{{ fileName }}</small>
+                        </div>
+                        <IconButton
+                            v-if="windowWidth < 1024"
+                            :dark-mode="darkMode"
+                            @click="rightPanelOpen = !rightPanelOpen"
+                        >
+                            <i class="fas fa-chart-bar text-sm"></i>
+                        </IconButton>
                     </div>
-                    <IconButton
-                        v-if="windowWidth < 1024"
-                        :dark-mode="darkMode"
-                        @click="rightPanelOpen = !rightPanelOpen"
-                    >
-                        <i class="fas fa-chart-bar text-sm"></i>
-                    </IconButton>
-                </div>
 
-                <!-- 테이블 -->
-                <BomResultTable
+                    <BomResultTable
+                        :pcb-item-list="pcbItemList"
+                        :dark-mode="darkMode"
+                        :expanded-rows="expandedRows"
+                        :selected-rows="selectedRows"
+                        :right-panel-open="rightPanelOpen"
+                        @toggle-row="toggleRow"
+                        @toggle-select="toggleSelect"
+                    />
+
+                    <OrderPanel
+                        :dark-mode="darkMode"
+                        :right-panel-open="rightPanelOpen"
+                        :pcb-items="pcbItems"
+                        :matched-count="matchedCount"
+                        :matched-percent="matchedPercent"
+                        :unmatched-count="unmatchedCount"
+                        :order-summary="orderSummary"
+                        :total-amount="totalAmount"
+                        :final-amount="finalAmount"
+                        :is-edit-mode="false"
+                        @request-quote="handleRequestQuote"
+                        @add-to-cart="handleAddToCart"
+                    />
+                </template>
+
+                <!-- 관리자 뷰 -->
+                <AdminResultView
+                    v-else
                     :pcb-item-list="pcbItemList"
                     :dark-mode="darkMode"
-                    :expanded-rows="expandedRows"
                     :selected-rows="selectedRows"
-                    :right-panel-open="rightPanelOpen"
-                    @toggle-row="toggleRow"
-                    @toggle-select="toggleSelect"
-                />
-
-                <!-- 오른쪽 패널 (fixed) -->
-                <OrderPanel
-                    :dark-mode="darkMode"
-                    :right-panel-open="rightPanelOpen"
+                    :file-name="fileName"
                     :pcb-items="pcbItems"
                     :matched-count="matchedCount"
                     :matched-percent="matchedPercent"
                     :unmatched-count="unmatchedCount"
                     :order-summary="orderSummary"
-                    :total-amount="totalAmount"
-                    :final-amount="finalAmount"
-                    :is-edit-mode="isEditMode"
-                    @request-quote="handleRequestQuote"
-                    @add-to-cart="handleAddToCart"
+                    :total-amount="adminTotalAmount"
+                    :final-amount="adminFinalAmount"
+                    :margin-summary="marginSummary"
+                    @go-back="goBack"
+                    @toggle-select="toggleSelect"
+                    @toggle-select-all="toggleSelectAll"
+                    @update-qty="triggerReactivity"
+                    @update-price-override="triggerReactivity"
+                    @reset-price-override="handleResetPriceOverride"
+                    @update-package="triggerReactivity"
                     @save="handleSave"
                     @update:shipping-fee="orderSummary.shippingFee = $event"
                     @update:management-fee="orderSummary.managementFee = $event"
+                    @update:discount="orderSummary.discount = $event"
+                    @update:expected-delivery="orderSummary.expectedDelivery = $event"
+                    @update:memo="orderSummary.memo = $event"
                 />
             </section>
         </main>
@@ -149,11 +177,12 @@ import IconPanelLeft from "@/components/icons/IconPanelLeft.vue";
 import IconSun from "@/components/icons/IconSun.vue";
 import IconMoon from "@/components/icons/IconMoon.vue";
 import IconUpload from "@/components/icons/IconUpload.vue";
-import { processFile, updateSelectedPrice, getCalculatedPrice } from "./services";
+import { processFile, updateSelectedPrice, getCalculatedPrice, getSalePrice, calculateMarginSummary, removePriceOverride } from "./services";
 import NavItem from "./components/NavItem.vue";
 import IconButton from "./components/IconButton.vue";
 import BomResultTable from "./components/BomResultTable.vue";
 import OrderPanel from "./components/OrderPanel.vue";
+import AdminResultView from "./components/AdminResultView.vue";
 
 export default defineComponent({
     name: 'SpSmartBomV2',
@@ -165,7 +194,8 @@ export default defineComponent({
         NavItem,
         IconButton,
         BomResultTable,
-        OrderPanel
+        OrderPanel,
+        AdminResultView
     },
     props: {
         params: {
@@ -193,12 +223,19 @@ export default defineComponent({
             shippingFee: 30000,
             managementFee: 25000,
             totalAmount: 0,
-            finalAmount: 0
+            finalAmount: 0,
+            discount: 0,
+            memo: ''
         });
 
         // URL 파라미터로 편집 모드 확인
         const urlParams = new URLSearchParams(window.location.search);
         isEditMode.value = urlParams.get('mode') === 'edit';
+
+        // 관리자 모드일 때 사이드바 접기
+        if (isEditMode.value) {
+            sidebarOpen.value = false;
+        }
 
         const navItems = [
             { icon: 'fas fa-file-alt', label: 'BOMs', active: true },
@@ -220,7 +257,9 @@ export default defineComponent({
         // 반응형 사이드바 + 오른쪽 패널
         const onResize = () => {
             windowWidth.value = window.innerWidth;
-            sidebarOpen.value = windowWidth.value >= 768;
+            if (!isEditMode.value) {
+                sidebarOpen.value = windowWidth.value >= 768;
+            }
             rightPanelOpen.value = windowWidth.value >= 1024;
         };
         onMounted(() => window.addEventListener('resize', onResize));
@@ -237,6 +276,47 @@ export default defineComponent({
         const finalAmount = computed(() => {
             return totalAmount.value + orderSummary.value.shippingFee + orderSummary.value.managementFee;
         });
+
+        // 관리자 모드: 판매가 기준 합계
+        const adminTotalAmount = computed(() => {
+            return pcbItemList.value
+                .filter((_, index) => selectedRows.value.has(index))
+                .filter(item => item.selectedPrice)
+                .reduce((sum, item) => sum + getSalePrice(item) * item.selectedPrice!.qty, 0);
+        });
+
+        const adminFinalAmount = computed(() => {
+            return adminTotalAmount.value
+                + orderSummary.value.shippingFee
+                + orderSummary.value.managementFee
+                - (orderSummary.value.discount || 0);
+        });
+
+        const marginSummary = computed(() => {
+            return calculateMarginSummary(pcbItemList.value, selectedRows.value);
+        });
+
+        const toggleSelectAll = () => {
+            const pcbIndices = pcbItemList.value
+                .map((item, idx) => ({ item, idx }))
+                .filter(({ item }) => item.is_pcb === true)
+                .map(({ idx }) => idx);
+
+            if (selectedRows.value.size === pcbIndices.length) {
+                selectedRows.value = new Set();
+            } else {
+                selectedRows.value = new Set(pcbIndices);
+            }
+        };
+
+        const handleResetPriceOverride = (index: number) => {
+            removePriceOverride(pcbItemList.value[index]);
+            pcbItemList.value = [...pcbItemList.value];
+        };
+
+        const triggerReactivity = () => {
+            pcbItemList.value = [...pcbItemList.value];
+        };
 
         // 핸들러
         const getSelectedItems = () => {
@@ -344,6 +424,9 @@ export default defineComponent({
             // 주문 요약 관련
             orderSummary, totalAmount, finalAmount, isEditMode,
             handleRequestQuote, handleAddToCart, handleSave,
+            // 관리자 모드
+            adminTotalAmount, adminFinalAmount, marginSummary,
+            toggleSelectAll, handleResetPriceOverride, triggerReactivity,
             // 오른쪽 패널
             rightPanelOpen, windowWidth
         };

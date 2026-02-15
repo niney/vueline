@@ -153,9 +153,85 @@ html, body {
         }
     }
 
+    /* 관리자 패널 number input 스피너 제거 */
+    .admin-top-panel {
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    }
+
+    /* 관리자 테이블 */
+    .admin-result-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+            height: 44px;
+            vertical-align: middle;
+            box-sizing: border-box;
+        }
+
+        th:first-child,
+        td:first-child {
+            width: 40px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            color: #9ca3af;
+            font-weight: 500;
+            font-size: 11px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            &:hover {
+                background: rgba(255,255,255,0.02);
+
+                /* hover 시 편집 버튼 표시 */
+                .fa-pen {
+                    opacity: 0.4 !important;
+                }
+            }
+        }
+
+        .inline-price-input {
+            width: 90px;
+            padding: 4px 8px;
+            border: 1px solid;
+            border-radius: 4px;
+            text-align: right;
+            font-size: 13px;
+            font-variant-numeric: tabular-nums;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+    }
+
     /* 라이트 모드 테이블 */
     &.light-mode {
         .result-table {
+            th, td {
+                border-bottom-color: #e5e7eb;
+            }
+
+            tbody tr:hover {
+                background: rgba(0,0,0,0.02);
+            }
+        }
+
+        .admin-result-table {
             th, td {
                 border-bottom-color: #e5e7eb;
             }

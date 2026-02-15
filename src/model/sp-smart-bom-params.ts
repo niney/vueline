@@ -197,6 +197,10 @@ export interface PcbItem {
         moq: number;
         stock: number;
     };
+    priceOverride?: {
+        unitPrice: number;
+        appliedAt: string;
+    };
 }
 
 export interface OrderSummary {
@@ -224,6 +228,14 @@ export interface OrderSummaryV2 {
     shippingFee: number;
     managementFee: number;
     finalAmount: number;
+    discount?: number;
+    memo?: string;
+}
+
+export interface MarginSummary {
+    totalCost: number;
+    totalMargin: number;
+    marginPercent: number;
 }
 
 interface CartItem {
